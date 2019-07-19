@@ -1,5 +1,7 @@
 ﻿  main.cpp
   node.cpp
   stretch.cpp
-f:\visual_studio_project\yarn-cloth-sim\yarn-cloth-sim\yarn-cloth-sim\stretch.cpp(6): error C2512: “Node”: 没有合适的默认构造函数可用
-  f:\visual_studio_project\yarn-cloth-sim\yarn-cloth-sim\yarn-cloth-sim\node.h(25): note: 参见“Node”的声明
+  正在生成代码
+  All 5 functions were compiled because no usable IPDB/IOBJ from previous compilation was found.
+  已完成代码的生成
+  Yarn-cloth-sim.vcxproj -> F:\Visual_Studio_Project\Yarn-cloth-sim\Yarn-cloth-sim\x64\Release\Yarn-cloth-sim.exe

@@ -124,8 +124,11 @@
     <ClInclude Include="stretch.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="bend.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="node.cpp" />
+    <ClCompile Include="parallel_contact.cpp" />
+    <ClCompile Include="shear.cpp" />
     <ClCompile Include="stretch.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

@@ -41,5 +41,14 @@
     <ClCompile Include="stretch.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
+    <ClCompile Include="shear.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="bend.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="parallel_contact.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
   </ItemGroup>
 </Project>

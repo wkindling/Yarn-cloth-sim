@@ -7,15 +7,14 @@
 
 #define M_PI 3.1415926535
 
-//Left & Right for Warp
-//Up & Down for Weft
-enum NodeLocation //ClockWise
+//Left & Right for Warp, Up & Down for Weft
+enum NodeLocation
 {
 	Left,
 	Up,
 	Right,
 	Down
-};
+};//ClockWise
 
 enum YarnType // Whcih yarn is up, normal for single yarn
 {
@@ -29,9 +28,6 @@ class Node
 public:
 	Node(Eigen::Vector3d pos, double _u, double _v);
 	virtual ~Node();
-
-
-
 
 public:
 	//Normal Node
@@ -47,6 +43,10 @@ public:
 	Eigen::Vector2d velocityUV;
 
 	YarnType whichUp;
+
+	//Force
+
+
 
 };
 
