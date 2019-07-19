@@ -14,4 +14,32 @@
       <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
     </Filter>
   </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="node.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="stretch.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="bend.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="shear.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="parallel_contact.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="main.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="node.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="stretch.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+  </ItemGroup>
 </Project>
