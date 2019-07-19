@@ -118,6 +118,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClInclude Include="bend.h" />
+    <ClInclude Include="cloth.h" />
     <ClInclude Include="node.h" />
     <ClInclude Include="parallel_contact.h" />
     <ClInclude Include="shear.h" />
@@ -125,6 +126,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="bend.cpp" />
+    <ClCompile Include="cloth.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="node.cpp" />
     <ClCompile Include="parallel_contact.cpp" />

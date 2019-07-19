@@ -30,6 +30,9 @@
     <ClInclude Include="parallel_contact.h">
       <Filter>头文件</Filter>
     </ClInclude>
+    <ClInclude Include="cloth.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp">
@@ -48,6 +51,9 @@
       <Filter>源文件</Filter>
     </ClCompile>
     <ClCompile Include="parallel_contact.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="cloth.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
   </ItemGroup>

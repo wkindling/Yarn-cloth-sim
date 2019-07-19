@@ -12,6 +12,7 @@ ParallelContactSpring::ParallelContactSpring(Node* n0, Node* n1, double _Kc, dou
 	L = _L;
 	R = _R;
 
+	d = 4 * R;
 	parallelContactEnergy = 0;
 
 	springType = type;
@@ -19,3 +20,24 @@ ParallelContactSpring::ParallelContactSpring(Node* n0, Node* n1, double _Kc, dou
 
 ParallelContactSpring::~ParallelContactSpring() {}
 
+void ParallelContactSpring::solve()
+{
+	if (springType == Weft) solveV();
+
+	else if (springType == Warp) solveU();
+	
+	return;
+}
+
+void ParallelContactSpring::solveU()
+{
+
+
+}
+
+void ParallelContactSpring::solveV()
+{
+
+
+
+}

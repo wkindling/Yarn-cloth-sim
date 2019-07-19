@@ -13,13 +13,16 @@ public:
 	ParallelContactSpring(Node* n0, Node* n1, double _Kc, double _R, double _L, YarnType type);
 	virtual ~ParallelContactSpring();
 
-
+	void solve();
+	void solveU();
+	void solveV();
 
 public:
 	Node *node0, *node1;
 	double Kc;
 	double L, R;
-	
+	double d;
+
 	double parallelContactEnergy;
 
 	YarnType springType;
