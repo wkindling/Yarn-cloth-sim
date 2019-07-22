@@ -14,7 +14,7 @@ double mouseX = 0, mouseY = 0;
 bool firstMouse = true;
 
 Camera camera(glm::vec3(12, 11, 5), glm::vec3(0,0,1),-132,-17);
-Cloth cloth(15,15,0.05,0.5);
+Cloth cloth(15, 15, 0.05, 0.5);
 
 void init()
 {

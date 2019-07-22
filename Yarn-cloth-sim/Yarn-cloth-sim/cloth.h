@@ -23,7 +23,7 @@ public:
 public:
 	int width, height;
 	double R, L;
-	double Y;
+	double Y, B, S, Kc;
 
 	std::vector<Node*> nodes;
 

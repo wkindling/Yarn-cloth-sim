@@ -12,6 +12,8 @@ Node::Node(Vector3d pos, double _u, double _v)
 	anchorU = _u;
 	anchorV = _v;
 	velocityUV.setZero();
+
+	//whichUp and index assigned externally
 }
 
 Node::~Node() {}

@@ -16,13 +16,14 @@ enum NodeLocation
 	Down
 };//ClockWise
 
-enum YarnType // Whcih yarn is up, normal for single yarn
+enum YarnType // Warp for horizontal, Weft for vertical
 {
-	Normal,
+	//Normal,
 	Warp,
 	Weft,
 };
 
+//Currently we ignore the normal nodes in the cloth
 class Node
 {
 public:
@@ -44,8 +45,7 @@ public:
 
 	YarnType whichUp;
 
-	int cross_index;
-	int normal_index; // Record global matrix
+	int index; // Record global matrix
 
 	EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 };

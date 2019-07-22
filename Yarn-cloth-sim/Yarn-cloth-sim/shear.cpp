@@ -3,7 +3,7 @@
 using namespace std;
 using namespace Eigen;
 
-ShearSpring::ShearSpring(Node* n0, Node* n1, Node* n2, double _S, double _R, double _L, YarnType type)
+ShearSpring::ShearSpring(Node* n0, Node* n1, Node* n2, double _S, double _R, double _L)
 {
 	node0 = n0;
 	node1 = n1;
@@ -14,7 +14,6 @@ ShearSpring::ShearSpring(Node* n0, Node* n1, Node* n2, double _S, double _R, dou
 	
 	Kx = S * R*R;
 	shearEnergy = 0;
-	springType = type;
 }
 
 ShearSpring::~ShearSpring() {}

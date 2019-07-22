@@ -10,7 +10,7 @@
 class ShearSpring
 {
 public:
-	ShearSpring(Node* n0, Node* n1, Node* n2, double _S, double _R, double _L, YarnType type);
+	ShearSpring(Node* n0, Node* n1, Node* n2, double _S, double _R, double _L);
 	virtual ~ShearSpring();
 
 	void solve();
@@ -21,7 +21,7 @@ public:
 	double shearEnergy;
 	double S, R, L, Kx;
 
-	YarnType springType;
+
 
 };
 

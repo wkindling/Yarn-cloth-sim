@@ -1,17 +1,13 @@
-﻿  bend.cpp
-  cloth.cpp
+﻿  cloth.cpp
+f:\visual_studio_project\yarn-cloth-sim\yarn-cloth-sim\yarn-cloth-sim\cloth.cpp(41): warning C4267: “=”: 从“size_t”转换到“int”，可能丢失数据
   main.cpp
 f:\visual_studio_project\yarn-cloth-sim\yarn-cloth-sim\yarn-cloth-sim\run.hpp(104): warning C4244: “参数”: 从“double”转换到“float”，可能丢失数据
 f:\visual_studio_project\yarn-cloth-sim\yarn-cloth-sim\yarn-cloth-sim\run.hpp(112): warning C4305: “参数”: 从“double”到“float”截断
 f:\visual_studio_project\yarn-cloth-sim\yarn-cloth-sim\yarn-cloth-sim\run.hpp(113): warning C4305: “参数”: 从“double”到“float”截断
 f:\visual_studio_project\yarn-cloth-sim\yarn-cloth-sim\yarn-cloth-sim\run.hpp(114): warning C4305: “参数”: 从“double”到“float”截断
 f:\visual_studio_project\yarn-cloth-sim\yarn-cloth-sim\yarn-cloth-sim\run.hpp(115): warning C4305: “参数”: 从“double”到“float”截断
-  node.cpp
-  parallel_contact.cpp
-  shear.cpp
-  stretch.cpp
   正在生成代码
-  0 of 688 functions ( 0.0%) were compiled, the rest were copied from previous compilation.
+  5 of 596 functions ( 0.8%) were compiled, the rest were copied from previous compilation.
     0 functions were new in current compilation
     0 functions had inline decision re-evaluated but remain unchanged
   已完成代码的生成
