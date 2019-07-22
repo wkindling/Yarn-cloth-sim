@@ -15,11 +15,16 @@ class BendSpring;
 class Cloth
 {
 public:
-	Cloth();
+	Cloth(int w, int h, double _R, double _L);
 	virtual ~Cloth();
 
+	void draw();
 
 public:
+	int width, height;
+	double R, L;
+	double Y;
+
 	std::vector<Node*> nodes;
 
 	std::vector<ShearSpring*> shear_springs;

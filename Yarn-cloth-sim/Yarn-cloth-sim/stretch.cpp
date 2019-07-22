@@ -1,4 +1,5 @@
 #include "stretch.h"
+#include <freeglut.h>
 
 using namespace std;
 using namespace Eigen;
@@ -53,3 +54,48 @@ void StretchSpring::solveV()
 
 }
 
+void StretchSpring::draw()
+{
+	if (springType == Weft)
+	{
+		if (node0->whichUp == Weft)
+		{
+			glColor3d(0.9, 0.9, 0.9);
+			glLineWidth(2.0f);
+			glBegin(GL_LINES);
+			glVertex3d(node0->position.x(), node0->position.y(), node0->position.z() + R);
+			glVertex3d(node1->position.x(), node1->position.y(), node1->position.z() - R);
+			glEnd();
+		}
+		else if (node1->whichUp==Weft)
+		{
+			glColor3d(0.9, 0.9, 0.9);
+			glLineWidth(2.0f);
+			glBegin(GL_LINES);
+			glVertex3d(node0->position.x(), node0->position.y(), node0->position.z() - R);
+			glVertex3d(node1->position.x(), node1->position.y(), node1->position.z() + R);
+			glEnd();
+		}
+	}
+	else if (springType==Warp)
+	{
+		if (node0->whichUp == Warp)
+		{
+			glColor3d(0.9, 0.9, 0.9);
+			glLineWidth(2.0f);
+			glBegin(GL_LINES);
+			glVertex3d(node0->position.x(), node0->position.y(), node0->position.z() + R);
+			glVertex3d(node1->position.x(), node1->position.y(), node1->position.z() - R);
+			glEnd();
+		}
+		else if (node1->whichUp == Warp)
+		{
+			glColor3d(0.9, 0.9, 0.9);
+			glLineWidth(2.0f);
+			glBegin(GL_LINES);
+			glVertex3d(node0->position.x(), node0->position.y(), node0->position.z() - R);
+			glVertex3d(node1->position.x(), node1->position.y(), node1->position.z() + R);
+			glEnd();
+		}
+	}
+}

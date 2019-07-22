@@ -18,6 +18,8 @@ public:
 	void solveU();
 	void solveV();
 
+	void draw();
+
 public:
 	Node *node0, *node1;
 

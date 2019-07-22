@@ -70,7 +70,8 @@
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
-    <IncludePath>C:\Users\dell\Desktop\env\eigen;$(IncludePath)</IncludePath>
+    <IncludePath>C:\Users\dell\Desktop\env\eigen;C:\Users\dell\Desktop\env\freeglut;C:\Users\dell\Desktop\env\glm-master;$(IncludePath)</IncludePath>
+    <LibraryPath>C:\Users\dell\Desktop\env\freeglut;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
@@ -110,17 +111,22 @@
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <SDLCheck>true</SDLCheck>
       <ConformanceMode>true</ConformanceMode>
+      <InlineFunctionExpansion>AnySuitable</InlineFunctionExpansion>
+      <FavorSizeOrSpeed>Speed</FavorSizeOrSpeed>
     </ClCompile>
     <Link>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
+      <AdditionalDependencies>freeglut.lib;freeglut_static.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClInclude Include="bend.h" />
+    <ClInclude Include="camera.h" />
     <ClInclude Include="cloth.h" />
     <ClInclude Include="node.h" />
     <ClInclude Include="parallel_contact.h" />
+    <ClInclude Include="run.hpp" />
     <ClInclude Include="shear.h" />
     <ClInclude Include="stretch.h" />
   </ItemGroup>

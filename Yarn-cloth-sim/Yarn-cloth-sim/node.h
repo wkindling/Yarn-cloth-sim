@@ -46,6 +46,8 @@ public:
 
 	int cross_index;
 	int normal_index; // Record global matrix
+
+	EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 };
 
 
