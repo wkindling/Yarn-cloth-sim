@@ -114,3 +114,4 @@ V=\left\{\begin{aligned}
  \end{aligned} \right.
 $$
 与一般的接触力类似，当刺穿时会有一个非常大的反应力将其推回。
+

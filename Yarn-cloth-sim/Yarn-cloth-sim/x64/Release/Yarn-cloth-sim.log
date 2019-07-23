@@ -1,14 +1,12 @@
-﻿  cloth.cpp
-f:\visual_studio_project\yarn-cloth-sim\yarn-cloth-sim\yarn-cloth-sim\cloth.cpp(41): warning C4267: “=”: 从“size_t”转换到“int”，可能丢失数据
-  main.cpp
+﻿  main.cpp
 f:\visual_studio_project\yarn-cloth-sim\yarn-cloth-sim\yarn-cloth-sim\run.hpp(104): warning C4244: “参数”: 从“double”转换到“float”，可能丢失数据
 f:\visual_studio_project\yarn-cloth-sim\yarn-cloth-sim\yarn-cloth-sim\run.hpp(112): warning C4305: “参数”: 从“double”到“float”截断
 f:\visual_studio_project\yarn-cloth-sim\yarn-cloth-sim\yarn-cloth-sim\run.hpp(113): warning C4305: “参数”: 从“double”到“float”截断
 f:\visual_studio_project\yarn-cloth-sim\yarn-cloth-sim\yarn-cloth-sim\run.hpp(114): warning C4305: “参数”: 从“double”到“float”截断
 f:\visual_studio_project\yarn-cloth-sim\yarn-cloth-sim\yarn-cloth-sim\run.hpp(115): warning C4305: “参数”: 从“double”到“float”截断
   正在生成代码
-  5 of 596 functions ( 0.8%) were compiled, the rest were copied from previous compilation.
-    0 functions were new in current compilation
-    0 functions had inline decision re-evaluated but remain unchanged
+  56 of 638 functions ( 8.8%) were compiled, the rest were copied from previous compilation.
+    23 functions were new in current compilation
+    10 functions had inline decision re-evaluated but remain unchanged
   已完成代码的生成
   Yarn-cloth-sim.vcxproj -> F:\Visual_Studio_Project\Yarn-cloth-sim\Yarn-cloth-sim\x64\Release\Yarn-cloth-sim.exe
