@@ -19,3 +19,14 @@ Node::Node(Vector3d pos, double _u, double _v)
 Node::~Node() {}
 
 
+// Use SVD to get the vertex normal according to neighbors
+Vector3d Node::getNormal()
+{
+
+
+
+
+
+
+
+}

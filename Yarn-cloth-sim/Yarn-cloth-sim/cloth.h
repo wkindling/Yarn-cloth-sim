@@ -5,8 +5,8 @@
 #include <Eigen/Sparse>
 #include <Eigen/Dense>
 #include <vector>
+#include "node.h"
 
-class Node;
 class ShearSpring;
 class StretchSpring;
 class ParallelContactSpring;
@@ -18,8 +18,14 @@ public:
 	Cloth(int w, int h, double _R, double _L);
 	virtual ~Cloth();
 
+	void build();
+	void step();
 	void draw();
 
+	void computeForce();
+	void computeInertia();
+	void solve();
+	
 public:
 	int width, height;
 	double R, L;
@@ -32,19 +38,14 @@ public:
 	std::vector<ParallelContactSpring*> parallel_contact_springs;
 	std::vector<BendSpring*> bend_springs;
 
+
 	Eigen::VectorXd v;
 	Eigen::VectorXd f;
 	Eigen::SparseMatrix<double> M;
 	Eigen::SparseMatrix<double> K;
 
+
 };
-
-
-
-
-
-
-
 
 
 

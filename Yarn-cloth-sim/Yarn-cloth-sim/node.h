@@ -7,6 +7,8 @@
 
 #define M_PI 3.1415926535
 
+typedef Eigen::Triplet<double> T;
+
 //Left & Right for Warp, Up & Down for Weft
 enum NodeLocation
 {
@@ -30,6 +32,8 @@ public:
 	Node(Eigen::Vector3d pos, double _u, double _v);
 	virtual ~Node();
 
+	Eigen::Vector3d getNormal();
+
 public:
 	//Normal Node
 	Eigen::Vector3d position;
@@ -49,6 +53,5 @@ public:
 
 	EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 };
-
 
 #endif

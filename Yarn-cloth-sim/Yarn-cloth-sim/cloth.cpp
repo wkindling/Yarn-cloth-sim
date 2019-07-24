@@ -25,12 +25,20 @@ Cloth::Cloth(int w, int h, double _R, double _L)
 	cout << "Yarn Radius : " << R << endl;
 	cout << "Inter-Yarn Distance : " << L << endl;
 	
+	build();
+
+}
+
+Cloth::~Cloth() {}
+
+void Cloth::build()
+{
 	//Create node list
 	for (int j = 0; j < height; j++) //u for warp (x)
-	{ 
+	{
 		for (int i = 0; i < width; i++) // v for weft (y)
 		{
-			Node* node = new Node(Vector3d(i*L,j*L,0),i*L,j*L);
+			Node* node = new Node(Vector3d(i*L, j*L, 0), i*L, j*L);
 
 			if ((i + j) % 2 == 0)
 			{
@@ -56,7 +64,6 @@ Cloth::Cloth(int w, int h, double _R, double _L)
 	}
 
 	/*Add 4 kinds of Springs */
-
 	//Add stretch spring, avoid duplicate
 	for (int j = 0; j < height; j++)
 	{
@@ -129,7 +136,7 @@ Cloth::Cloth(int w, int h, double _R, double _L)
 			}
 		}
 	}
-	
+
 	//Add Parallel Contact Springs, avoid duplicate
 	for (int j = 0; j < height; j++)
 	{
@@ -156,9 +163,66 @@ Cloth::Cloth(int w, int h, double _R, double _L)
 	cout << "Bend: " << bend_springs.size() << endl;
 	cout << "Shear: " << shear_springs.size() << endl;
 	cout << "Parallel: " << parallel_contact_springs.size() << endl;
+
+	v.resize(nodes.size()*5);
+	f.resize(nodes.size() * 5);
+
+	M.resize(nodes.size() * 5, nodes.size() * 5);
+	K.resize(nodes.size() * 5, nodes.size() * 5);
+
+	v.setZero();
+	f.setZero();
+	M.setZero();
+	K.setZero();
 }
 
-Cloth::~Cloth() {}
+void Cloth::computeInertia()
+{
+
+
+
+}
+
+
+void Cloth::computeForce()
+{
+	f.setZero();
+	K.setZero();
+
+	vector<T> _K;
+
+	for (int i = 0; i < stretch_springs.size(); i++)
+	{
+		stretch_springs[i]->solve(_K, f);
+	}
+
+	for (int i = 0; i < bend_springs.size(); i++)
+	{
+		bend_springs[i]->solve();
+	}
+	
+	/*
+		Compute compression force here
+	*/
+
+	/*
+		Compute friction force here
+	*/
+
+	for (int i = 0; i < shear_springs.size(); i++)
+	{
+		shear_springs[i]->solve();
+	}
+
+	for (int i = 0; i < parallel_contact_springs.size(); i++)
+	{
+		parallel_contact_springs[i]->solve();
+	}
+
+
+
+}
+
 
 void Cloth::draw()
 {

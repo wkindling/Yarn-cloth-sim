@@ -28,16 +28,16 @@ StretchSpring::StretchSpring(Node* n0, Node* n1, double _Y, double _R, YarnType 
 
 StretchSpring::~StretchSpring() {}
 
-void StretchSpring::solve()
+void StretchSpring::solve(vector<T>& _K, VectorXd& f)
 {
-	if (springType == Weft) solveV();
+	if (springType == Weft) solveV(_K, f);
 	
-	else if (springType == Warp) solveU();
+	else if (springType == Warp) solveU(_K, f);
 
 	return;
 }
 
-void StretchSpring::solveU()
+void StretchSpring::solveU(vector<T>& _K, VectorXd& f)
 {
 	double l = (node1->position - node0->position).norm();
 	double delta_u = abs(node1->u - node0->u);
@@ -49,14 +49,29 @@ void StretchSpring::solveU()
 
 	double V = 0.5*Ks*delta_u*(w.norm() - 1)*(w.norm() - 1);
 
-	//Compute and fill the force vector
+	int index0 = node0->index * 5;
+	int index1 = node1->index * 5;
+
+	/* Compute and fill the force vector */
 	Vector3d Fq1 = -Ks * (w.norm() - 1)*d;
 	Vector3d Fq0 = -Fq1;
 
 	double Fu1 = 0.5*Ks*(w.norm()*w.norm() - 1);
 	double Fu0 = -Fu1;
 
-	//Compute and fill the stiffness matrix
+	f(index0) = Fq0.x();
+	f(index0 + 1) = Fq0.y();
+	f(index0 + 2) = Fq0.z();
+	f(index0 + 3) = Fu0;
+	f(index0 + 4) = 0;
+	
+	f(index1) = Fq1.x();
+	f(index1 + 1) = Fq1.y();
+	f(index1 + 2) = Fq1.z();
+	f(index1 + 3) = Fu1;
+	f(index1 + 4) = 0;
+
+	/* Compute and fill the stiffness matrix */
 	//The local stiffness matrix should be 10*10
 	Matrix3d Fq1dq1 = Ks / l * P - Ks / delta_u * I;
 	Matrix3d Fq0dq0 = Fq1dq1;
@@ -78,11 +93,77 @@ void StretchSpring::solveU()
 	Vector3d Fu1dq0 = -Fu1dq1;
 	Vector3d Fu0dq1 = Fu1dq0;
 
-	/* TODO: Fill the block just like EoL*/
+	/* Fill the block just like EoL*/
+	//Fill Fq0 related blocks
+	for (int i = 0; i < 3; i++)
+	{
+		for (int j = 0; j < 3; j++)
+		{
+			_K.push_back(T(index0 + i, index0 + j, Fq0dq0(i, j))); //Fq0 dq0
+			_K.push_back(T(index0 + i, index1 + j, Fq0dq1(i, j))); //Fq0 dq1
+		}
+
+		_K.push_back(T(index0 + i, index0 + 3, Fq0du0(i))); //Fq0 du0
+		_K.push_back(T(index0 + i, index0 + 4, 0)); //Fq0 dv0
+		_K.push_back(T(index0 + i, index1 + 3, Fq0du1(i))); //Fq0 du1
+		_K.push_back(T(index0 + i, index1 + 4, 0)); //Fq0 dv1
+	}
+
+	//Fill Fq1 related blocks
+	for (int i = 0; i < 3; i++)
+	{
+		for (int j = 0; j < 3; j++)
+		{
+			_K.push_back(T(index1 + i, index0 + j, Fq1dq0(i, j))); //Fq1 q0
+			_K.push_back(T(index1 + i, index1 + j, Fq1dq1(i, j))); //Fq1 dq1
+		}
+
+		_K.push_back(T(index1 + i, index0 + 3, Fq1du0(i))); //Fq1 du0
+		_K.push_back(T(index1 + i, index0 + 4, 0)); //Fq1 dv0
+		_K.push_back(T(index1 + i, index1 + 3, Fq1du1(i))); //Fq1 du1
+		_K.push_back(T(index1 + i, index1 + 4, 0)); //Fq1 dv1
+	}
+
+	for (int i = 0; i < 3; i++)
+	{
+		_K.push_back(T(index0 + 3, index0 + i, Fu0dq0(i))); //Fu0 dq0
+		_K.push_back(T(index0 + 4, index0 + i, 0)); //Fv0 dq0
+		_K.push_back(T(index0 + 3, index1 + i, Fu0dq1(i))); //Fu0 dq1
+		_K.push_back(T(index0 + 4, index1 + i, 0)); //Fv0 dq1
+	}
+
+	_K.push_back(T(index0 + 3, index0 + 3, Fu0du0)); //Fu0 du0
+	_K.push_back(T(index0 + 3, index0 + 4, 0)); //Fu0 dv0
+	_K.push_back(T(index0 + 4, index0 + 3, 0)); //Fv0 du0
+	_K.push_back(T(index0 + 4, index0 + 4, 0)); //Fv0 dv0
+
+	_K.push_back(T(index0 + 3, index1 + 3, Fu0du1));//Fu0 du1
+	_K.push_back(T(index0 + 3, index1 + 4, 0));//Fu0 dv1
+	_K.push_back(T(index0 + 4, index1 + 3, 0)); //Fv0 du1
+	_K.push_back(T(index0 + 4, index1 + 4, 0)); //Fv0 dv1
+
+	for (int i = 0; i < 3; i++)
+	{
+		_K.push_back(T(index1 + 3, index0 + i, Fu1dq0(i))); //Fu1 dq0
+		_K.push_back(T(index1 + 4, index0 + i, 0)); //Fv1 dq0
+		_K.push_back(T(index1 + 3, index1 + i, Fu1dq1(i))); //Fu1 dq1
+		_K.push_back(T(index1 + 4, index1 + i, 0)); //Fv1 dq1
+	}
+
+	_K.push_back(T(index1 + 3, index0 + 3, Fu1du0)); //Fu1 du0
+	_K.push_back(T(index1 + 3, index0 + 4, 0)); //Fu1 dv0
+	_K.push_back(T(index1 + 4, index0 + 3, 0)); //Fv1 du0
+	_K.push_back(T(index1 + 4, index0 + 4, 0)); //Fv1 dv0
+
+	_K.push_back(T(index1 + 3, index1 + 3, Fu1du1)); // Fu1 du1
+	_K.push_back(T(index1 + 3, index1 + 4, 0)); // Fu1 dv1 
+	_K.push_back(T(index1 + 4, index1 + 3, 0)); // Fv1 du1
+	_K.push_back(T(index1 + 4, index1 + 4, 0)); //Fv1 dv1
+
 	
 }
 
-void StretchSpring::solveV()
+void StretchSpring::solveV(vector<T>& _K, VectorXd& f)
 {
 	double l = (node1->position - node0->position).norm();
 	double delta_v = abs(node1->v - node0->v);
@@ -101,6 +182,8 @@ void StretchSpring::solveV()
 
 	double Fv1 = 0.5*Ks*(w.norm()*w.norm() - 1);
 	double Fv0 = -Fv1;
+
+
 
 	//Compute and fill the stiffness matrix
 	//The local stiffness matrix should be 10*10
@@ -125,6 +208,9 @@ void StretchSpring::solveV()
 	Vector3d Fv0dq1 = Fv1dq0;
 
 	/*TODO: Fill the block just like EoL*/
+
+
+
 
 
 
