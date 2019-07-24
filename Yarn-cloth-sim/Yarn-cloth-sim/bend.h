@@ -13,10 +13,10 @@ public:
 	BendSpring(Node* n0, Node* n1, Node* n2, double _B, double _R, YarnType type);
 	virtual ~BendSpring();
 
-	void solve();
+	void solve(std::vector<T>& _K, Eigen::VectorXd& f);
 
-	void solveU();
-	void solveV();
+	void solveU(std::vector<T>& _K, Eigen::VectorXd& f);
+	void solveV(std::vector<T>& _K, Eigen::VectorXd& f);
 
 public:
 	Node *node0, *node1, *node2;

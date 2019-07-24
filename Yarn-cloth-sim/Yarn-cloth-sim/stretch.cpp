@@ -58,18 +58,12 @@ void StretchSpring::solveU(vector<T>& _K, VectorXd& f)
 
 	double Fu1 = 0.5*Ks*(w.norm()*w.norm() - 1);
 	double Fu0 = -Fu1;
-
-	f(index0) = Fq0.x();
-	f(index0 + 1) = Fq0.y();
-	f(index0 + 2) = Fq0.z();
-	f(index0 + 3) = Fu0;
-	f(index0 + 4) = 0;
 	
-	f(index1) = Fq1.x();
-	f(index1 + 1) = Fq1.y();
-	f(index1 + 2) = Fq1.z();
-	f(index1 + 3) = Fu1;
-	f(index1 + 4) = 0;
+	f.segment<3>(index0) += Fq0;
+	f(index0 + 3) += Fu0;
+
+	f.segment<3>(index1) += Fq1;
+	f(index1 + 3) += Fu1;
 
 	/* Compute and fill the stiffness matrix */
 	//The local stiffness matrix should be 10*10
@@ -93,74 +87,41 @@ void StretchSpring::solveU(vector<T>& _K, VectorXd& f)
 	Vector3d Fu1dq0 = -Fu1dq1;
 	Vector3d Fu0dq1 = Fu1dq0;
 
-	/* Fill the block just like EoL*/
-	//Fill Fq0 related blocks
-	for (int i = 0; i < 3; i++)
-	{
-		for (int j = 0; j < 3; j++)
-		{
-			_K.push_back(T(index0 + i, index0 + j, Fq0dq0(i, j))); //Fq0 dq0
-			_K.push_back(T(index0 + i, index1 + j, Fq0dq1(i, j))); //Fq0 dq1
-		}
+	MatrixXd f0q0;
+	f0q0.resize(5, 5);
+	f0q0.setZero();
+	f0q0.block<3, 3>(0, 0) = Fq0dq0;
+	f0q0.block<3, 1>(0, 3) = Fq0du0;
+	f0q0.block<1, 3>(3, 0) = Fu0dq0;
+	f0q0(3, 3) = Fu0du0;
+	fillBlock(_K, f0q0, index0, index0);
 
-		_K.push_back(T(index0 + i, index0 + 3, Fq0du0(i))); //Fq0 du0
-		_K.push_back(T(index0 + i, index0 + 4, 0)); //Fq0 dv0
-		_K.push_back(T(index0 + i, index1 + 3, Fq0du1(i))); //Fq0 du1
-		_K.push_back(T(index0 + i, index1 + 4, 0)); //Fq0 dv1
-	}
+	MatrixXd f0q1;
+	f0q1.resize(5, 5);
+	f0q1.setZero();
+	f0q1.block<3, 3>(0, 0) = Fq0dq1;
+	f0q1.block<3, 1>(0, 3) = Fq0du1;
+	f0q1.block<1, 3>(3, 0) = Fu0dq1;
+	f0q1(3, 3) = Fu0du1;
+	fillBlock(_K, f0q1, index0, index1);
 
-	//Fill Fq1 related blocks
-	for (int i = 0; i < 3; i++)
-	{
-		for (int j = 0; j < 3; j++)
-		{
-			_K.push_back(T(index1 + i, index0 + j, Fq1dq0(i, j))); //Fq1 q0
-			_K.push_back(T(index1 + i, index1 + j, Fq1dq1(i, j))); //Fq1 dq1
-		}
+	MatrixXd f1q0;
+	f1q0.resize(5, 5);
+	f1q0.setZero();
+	f1q0.block<3, 3>(0, 0) = Fq1dq0;
+	f1q0.block<3, 1>(0, 3) = Fq1du0;
+	f1q0.block<1, 3>(3, 0) = Fu1dq0;
+	f1q0(3, 3) = Fu1du0;
+	fillBlock(_K, f1q0, index1, index0);
 
-		_K.push_back(T(index1 + i, index0 + 3, Fq1du0(i))); //Fq1 du0
-		_K.push_back(T(index1 + i, index0 + 4, 0)); //Fq1 dv0
-		_K.push_back(T(index1 + i, index1 + 3, Fq1du1(i))); //Fq1 du1
-		_K.push_back(T(index1 + i, index1 + 4, 0)); //Fq1 dv1
-	}
-
-	for (int i = 0; i < 3; i++)
-	{
-		_K.push_back(T(index0 + 3, index0 + i, Fu0dq0(i))); //Fu0 dq0
-		_K.push_back(T(index0 + 4, index0 + i, 0)); //Fv0 dq0
-		_K.push_back(T(index0 + 3, index1 + i, Fu0dq1(i))); //Fu0 dq1
-		_K.push_back(T(index0 + 4, index1 + i, 0)); //Fv0 dq1
-	}
-
-	_K.push_back(T(index0 + 3, index0 + 3, Fu0du0)); //Fu0 du0
-	_K.push_back(T(index0 + 3, index0 + 4, 0)); //Fu0 dv0
-	_K.push_back(T(index0 + 4, index0 + 3, 0)); //Fv0 du0
-	_K.push_back(T(index0 + 4, index0 + 4, 0)); //Fv0 dv0
-
-	_K.push_back(T(index0 + 3, index1 + 3, Fu0du1));//Fu0 du1
-	_K.push_back(T(index0 + 3, index1 + 4, 0));//Fu0 dv1
-	_K.push_back(T(index0 + 4, index1 + 3, 0)); //Fv0 du1
-	_K.push_back(T(index0 + 4, index1 + 4, 0)); //Fv0 dv1
-
-	for (int i = 0; i < 3; i++)
-	{
-		_K.push_back(T(index1 + 3, index0 + i, Fu1dq0(i))); //Fu1 dq0
-		_K.push_back(T(index1 + 4, index0 + i, 0)); //Fv1 dq0
-		_K.push_back(T(index1 + 3, index1 + i, Fu1dq1(i))); //Fu1 dq1
-		_K.push_back(T(index1 + 4, index1 + i, 0)); //Fv1 dq1
-	}
-
-	_K.push_back(T(index1 + 3, index0 + 3, Fu1du0)); //Fu1 du0
-	_K.push_back(T(index1 + 3, index0 + 4, 0)); //Fu1 dv0
-	_K.push_back(T(index1 + 4, index0 + 3, 0)); //Fv1 du0
-	_K.push_back(T(index1 + 4, index0 + 4, 0)); //Fv1 dv0
-
-	_K.push_back(T(index1 + 3, index1 + 3, Fu1du1)); // Fu1 du1
-	_K.push_back(T(index1 + 3, index1 + 4, 0)); // Fu1 dv1 
-	_K.push_back(T(index1 + 4, index1 + 3, 0)); // Fv1 du1
-	_K.push_back(T(index1 + 4, index1 + 4, 0)); //Fv1 dv1
-
-	
+	MatrixXd f1q1;
+	f1q1.resize(5, 5);
+	f1q1.setZero();
+	f1q1.block<3, 3>(0, 0) = Fq1dq1;
+	f1q1.block<3, 1>(0, 3) = Fq1du1;
+	f1q1.block<1, 3>(3, 0) = Fu1dq1;
+	f1q1(3, 3) = Fu1du1;
+	fillBlock(_K, f1q1, index1, index1);
 }
 
 void StretchSpring::solveV(vector<T>& _K, VectorXd& f)
@@ -176,6 +137,9 @@ void StretchSpring::solveV(vector<T>& _K, VectorXd& f)
 
 	double V = 0.5*Ks*delta_v*(w.norm() - 1)*(w.norm() - 1);
 
+	int index0 = node0->index * 5;
+	int index1 = node1->index * 5;
+
 	//Compute and fill the force vector
 	Vector3d Fq1 = -Ks * (w.norm() - 1)*d;
 	Vector3d Fq0 = -Fq1;
@@ -183,7 +147,11 @@ void StretchSpring::solveV(vector<T>& _K, VectorXd& f)
 	double Fv1 = 0.5*Ks*(w.norm()*w.norm() - 1);
 	double Fv0 = -Fv1;
 
+	f.segment<3>(index0) += Fq0;
+	f(index0 + 4) += Fv0;
 
+	f.segment<3>(index1) += Fq1;
+	f(index1 + 4) += Fv1;
 
 	//Compute and fill the stiffness matrix
 	//The local stiffness matrix should be 10*10
@@ -207,15 +175,41 @@ void StretchSpring::solveV(vector<T>& _K, VectorXd& f)
 	Vector3d Fv1dq0 = -Fv1dq1;
 	Vector3d Fv0dq1 = Fv1dq0;
 
-	/*TODO: Fill the block just like EoL*/
+	MatrixXd f0q0;
+	f0q0.resize(5, 5);
+	f0q0.setZero();
+	f0q0.block<3, 3>(0, 0) = Fq0dq0;
+	f0q0.block<3, 1>(0, 4) = Fq0dv0;
+	f0q0.block<1, 3>(4, 0) = Fv0dq0;
+	f0q0(4, 4) = Fv0dv0;
+	fillBlock(_K, f0q0, index0, index0);
 
+	MatrixXd f0q1;
+	f0q1.resize(5, 5);
+	f0q1.setZero();
+	f0q1.block<3, 3>(0, 0) = Fq0dq1;
+	f0q1.block<3, 1>(0, 4) = Fq0dv1;
+	f0q1.block<1, 3>(4, 0) = Fv0dq1;
+	f0q1(4, 4) = Fv0dv1;
+	fillBlock(_K, f0q1, index0, index1);
 
+	MatrixXd f1q0;
+	f1q0.resize(5, 5);
+	f1q0.setZero();
+	f1q0.block<3, 3>(0, 0) = Fq1dq0;
+	f1q0.block<3, 1>(0, 4) = Fq1dv0;
+	f1q0.block<1, 3>(4, 0) = Fv1dq0;
+	f1q0(4, 4) = Fv1dv0;
+	fillBlock(_K, f1q0, index1, index0);
 
-
-
-
-
-
+	MatrixXd f1q1;
+	f1q1.resize(5, 5);
+	f1q1.setZero();
+	f1q1.block<3, 3>(0, 0) = Fq1dq1;
+	f1q1.block<3, 1>(0, 4) = Fq1dv1;
+	f1q1.block<1, 3>(4, 0) = Fv1dq1;
+	f1q1(4, 4) = Fv1dv1;
+	fillBlock(_K, f1q1, index1, index1);
 }
 
 void StretchSpring::draw()

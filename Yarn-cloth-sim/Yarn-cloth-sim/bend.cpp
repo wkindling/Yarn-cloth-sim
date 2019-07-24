@@ -29,17 +29,17 @@ BendSpring::BendSpring(Node* n0, Node* n1, Node* n2, double _B, double _R, YarnT
 
 BendSpring::~BendSpring() {}
 
-void BendSpring::solve()
+void BendSpring::solve(vector<T>& _K, VectorXd& f)
 {
-	if (springType == Warp) solveU();
+	if (springType == Warp) solveU(_K, f);
 
-	else if (springType == Weft) solveV();
+	else if (springType == Weft) solveV(_K, f);
 
 	return;
 }
 
 
-void BendSpring::solveU()
+void BendSpring::solveU(vector<T>& _K, VectorXd& f)
 {
 	double l1 = (node1->position - node0->position).norm();
 	double l2 = (node2->position - node0->position).norm();
@@ -59,6 +59,10 @@ void BendSpring::solveU()
 
 	double V = Kb * (theta*theta) / abs(u1 - u2);
 	
+	int index0 = node0->index * 5;
+	int index1 = node1->index * 5;
+	int index2 = node2->index * 5;
+
 	//Compute and fill the force vector
 	
 	Vector3d Fq1 = (-2 * Kb*theta) / (l1*(u1 - u2)*sin(theta))*P1*d2;
@@ -69,6 +73,15 @@ void BendSpring::solveU()
 	double Fu2 = -Fu1;
 	double Fu0 = 0;
 
+	f.segment<3>(index0) += Fq0;
+	f(index0 + 3) += Fu0;
+	
+	f.segment<3>(index1) += Fq1;
+	f(index1 + 3) += Fu1;
+
+	f.segment<3>(index2) += Fq2;
+	f(index2 + 3) += Fu2;
+	
 	//Compute and fill the stiffness matrix
 	//The local stiffness matrix should be 15*15
 	Matrix3d Fq1dq1 = 2 * Kb / (l1*l1*(u1 - u2)*sin(theta))*(theta*(P1*d2*d1.transpose() + cos(theta) / sin(theta) / sin(theta)*P1*d2*d2.transpose()*P1 + cos(theta)*P1 + d1 * d2.transpose()*P1) - 1 / (sin(theta))*P1*d2*d2.transpose()*P1);
@@ -104,16 +117,79 @@ void BendSpring::solveU()
 	Vector3d Fu1dq0 = -(Fu1dq1 + Fu1dq2);
 	Vector3d Fu2dq0 = -Fu1dq0;
 	
+	MatrixXd f0q0;
+	f0q0.resize(5, 5);
+	f0q0.setZero();
+	f0q0.block<3, 3>(0, 0) = Fq0dq0;
+	fillBlock(_K, f0q0, index0, index0);
 
-	/* TODO: Fill the block just like EoL*/
+	MatrixXd f0q1;
+	f0q1.resize(5, 5);
+	f0q1.setZero();
+	f0q1.block<3, 3>(0, 0) = Fq0dq1;
+	f0q1.block<3, 1>(0, 3) = Fq0du1;
+	fillBlock(_K, f0q1, index0, index1);
 
+	MatrixXd f0q2;
+	f0q2.resize(5, 5);
+	f0q2.setZero();
+	f0q2.block<3, 3>(0, 0) = Fq0dq2;
+	f0q2.block<3, 1>(0, 3) = Fq0du2;
+	fillBlock(_K, f0q2, index0, index2);
 
+	MatrixXd f1q0;
+	f1q0.resize(5, 5);
+	f1q0.setZero();
+	f1q0.block<3, 3>(0, 0) = Fq1dq0;
+	f1q0.block<1, 3>(3, 0) = Fu1dq0;
+	fillBlock(_K, f1q0, index1, index0);
 
+	MatrixXd f1q1;
+	f1q1.resize(5, 5);
+	f1q1.setZero();
+	f1q1.block<3, 3>(0, 0) = Fq1dq1;
+	f1q1.block<3, 1>(0, 3) = Fq1du1;
+	f1q1.block<1, 3>(3, 0) = Fu1dq1;
+	f1q1(3, 3) = Fu1du1;
+	fillBlock(_K, f1q1, index1, index1);
 
+	MatrixXd f1q2;
+	f1q2.resize(5, 5);
+	f1q2.setZero();
+	f1q2.block<3, 3>(0, 0) = Fq1dq2;
+	f1q2.block<3, 1>(0, 3) = Fq1du2;
+	f1q2.block<1, 3>(3, 0) = Fu1dq2;
+	f1q2(3, 3) = Fu1du2;
+	fillBlock(_K, f1q2, index1, index2);
+
+	MatrixXd f2q0;
+	f2q0.resize(5, 5);
+	f2q0.setZero();
+	f2q0.block<3, 3>(0, 0) = Fq2dq0;
+	f2q0.block<1, 3>(3, 0) = Fu2dq0;
+	fillBlock(_K, f2q0, index2, index0);
+
+	MatrixXd f2q1;
+	f2q1.resize(5, 5);
+	f2q1.setZero();
+	f2q1.block<3, 3>(0, 0) = Fq2dq1;
+	f2q1.block<3, 1>(0, 3) = Fq2du1;
+	f2q1.block<1, 3>(3, 0) = Fu2dq1;
+	f2q1(3, 3) = Fu2du1;
+	fillBlock(_K, f2q1, index2, index1);
+
+	MatrixXd f2q2;
+	f2q2.resize(5, 5);
+	f2q2.setZero();
+	f2q2.block<3, 3>(0, 0) = Fq2dq2;
+	f2q2.block<3, 1>(0, 3) = Fq2du2;
+	f2q2.block<1, 3>(3, 0) = Fu2dq2;
+	f2q2(3, 3) = Fu2du2;
+	fillBlock(_K, f2q2, index2, index2);
 
 }
 
-void BendSpring::solveV()
+void BendSpring::solveV(vector<T>& _K, VectorXd& f)
 {
 	double l1 = (node1->position - node0->position).norm();
 	double l2 = (node2->position - node0->position).norm();
@@ -133,6 +209,10 @@ void BendSpring::solveV()
 
 	double V = Kb * (theta*theta) / abs(v1 - v2);
 
+	int index0 = node0->index * 5;
+	int index1 = node1->index * 5;
+	int index2 = node2->index * 5;
+
 	//Compute and fill the force vector
 
 	Vector3d Fq1 = (-2 * Kb*theta) / (l1*(v1 - v2)*sin(theta))*P1*d2;
@@ -142,6 +222,15 @@ void BendSpring::solveV()
 	double Fv1 = Kb * theta*theta / ((v1 - v2)*(v1 - v2));
 	double Fv2 = -Fv1;
 	double Fv0 = 0;
+
+	f.segment<3>(index0) += Fq0;
+	f(index0 + 4) += Fv0;
+
+	f.segment<3>(index1) += Fq1;
+	f(index1 + 4) += Fv1;
+
+	f.segment<3>(index2) += Fq2;
+	f(index2 + 4) += Fv2;
 
 	//Compute and fill the stiffness matrix
 	//The local stiffness matrix should be 15*15
@@ -178,10 +267,73 @@ void BendSpring::solveV()
 	Vector3d Fv1dq0 = -(Fv1dq1 + Fv1dq2);
 	Vector3d Fv2dq0 = -Fv1dq0;
 
+	MatrixXd f0q0;
+	f0q0.resize(5, 5);
+	f0q0.setZero();
+	f0q0.block<3, 3>(0, 0) = Fq0dq0;
+	fillBlock(_K, f0q0, index0, index0);
 
-	/* TODO: Fill the block just like EoL*/
+	MatrixXd f0q1;
+	f0q1.resize(5, 5);
+	f0q1.setZero();
+	f0q1.block<3, 3>(0, 0) = Fq0dq1;
+	f0q1.block<3, 1>(0, 4) = Fq0dv1;
+	fillBlock(_K, f0q1, index0, index1);
 
+	MatrixXd f0q2;
+	f0q2.resize(5, 5);
+	f0q2.setZero();
+	f0q2.block<3, 3>(0, 0) = Fq0dq2;
+	f0q2.block<3, 1>(0, 4) = Fq0dv2;
+	fillBlock(_K, f0q2, index0, index2);
 
+	MatrixXd f1q0;
+	f1q0.resize(5, 5);
+	f1q0.setZero();
+	f1q0.block<3, 3>(0, 0) = Fq1dq0;
+	f1q0.block<1, 3>(4, 0) = Fv1dq0;
+	fillBlock(_K, f1q0, index1, index0);
 
+	MatrixXd f1q1;
+	f1q1.resize(5, 5);
+	f1q1.setZero();
+	f1q1.block<3, 3>(0, 0) = Fq1dq1;
+	f1q1.block<3, 1>(0, 4) = Fq1dv1;
+	f1q1.block<1, 3>(4, 0) = Fv1dq1;
+	f1q1(4, 4) = Fv1dv1;
+	fillBlock(_K, f1q1, index1, index1);
 
+	MatrixXd f1q2;
+	f1q2.resize(5, 5);
+	f1q2.setZero();
+	f1q2.block<3, 3>(0, 0) = Fq1dq2;
+	f1q2.block<3, 1>(0, 4) = Fq1dv2;
+	f1q2.block<1, 3>(4, 0) = Fv1dq2;
+	f1q2(4, 4) = Fv1dv2;
+	fillBlock(_K, f1q2, index1, index2);
+
+	MatrixXd f2q0;
+	f2q0.resize(5, 5);
+	f2q0.setZero();
+	f2q0.block<3, 3>(0, 0) = Fq2dq0;
+	f2q0.block<1, 3>(4, 0) = Fv2dq0;
+	fillBlock(_K, f2q0, index2, index0);
+
+	MatrixXd f2q1;
+	f2q1.resize(5, 5);
+	f2q1.setZero();
+	f2q1.block<3, 3>(0, 0) = Fq2dq1;
+	f2q1.block<3, 1>(0, 4) = Fq2dv1;
+	f2q1.block<1, 3>(4, 0) = Fv2dq1;
+	f2q1(4, 4) = Fv2dv1;
+	fillBlock(_K, f2q1, index2, index1);
+
+	MatrixXd f2q2;
+	f2q2.resize(5, 5);
+	f2q2.setZero();
+	f2q2.block<3, 3>(0, 0) = Fq2dq2;
+	f2q2.block<3, 1>(0, 4) = Fq2dv2;
+	f2q2.block<1, 3>(4, 0) = Fv2dq2;
+	f2q2(4, 4) = Fv2dv2;
+	fillBlock(_K, f2q2, index2, index2);
 }

@@ -5,9 +5,7 @@
 #include <Eigen/Dense>
 #include <Eigen/Sparse>
 
-#define M_PI 3.1415926535
-
-typedef Eigen::Triplet<double> T;
+#include "utility.h"
 
 //Left & Right for Warp, Up & Down for Weft
 enum NodeLocation
