@@ -6,8 +6,17 @@ using namespace Eigen;
 BendSpring::BendSpring(Node* n0, Node* n1, Node* n2, double _B, double _R, YarnType type)
 {
 	node0 = n0;
-	node1 = n1;
-	node2 = n2;
+	
+	if (type == Warp)
+	{
+		node1 = n1->u > n2->u ? n1 : n2;
+		node2 = n2->u < n1->u ? n2 : n1;
+	}
+	else if (type == Weft)
+	{
+		node1 = n1->v > n2->v ? n1 : n2;
+		node2 = n2->v < n1->v ? n2 : n1;
+	}
 
 	B = _B;
 	R = _R;
@@ -47,6 +56,8 @@ void BendSpring::solveU()
 	double u0 = node0->u;
 	double u1 = node1->u;
 	double u2 = node2->u;
+
+	double V = Kb * (theta*theta) / abs(u1 - u2);
 	
 	//Compute and fill the force vector
 	
@@ -119,6 +130,8 @@ void BendSpring::solveV()
 	double v0 = node0->v;
 	double v1 = node1->v;
 	double v2 = node2->v;
+
+	double V = Kb * (theta*theta) / abs(v1 - v2);
 
 	//Compute and fill the force vector
 

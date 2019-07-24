@@ -98,6 +98,7 @@ Cloth::Cloth(int w, int h, double _R, double _L)
 	}
 
 	//Add Shear Springs, no need to avoid duplicate
+	//We need to ensure that n0-n3 is the weft yarn, and n0-n1 is the wap yarn
 	for (int j = 0; j < height; j++)
 	{
 		for (int i = 0; i < width; i++)
@@ -111,7 +112,7 @@ Cloth::Cloth(int w, int h, double _R, double _L)
 
 			if (p->neighbor[NodeLocation::Up] && p->neighbor[NodeLocation::Right])
 			{
-				ShearSpring* rightUpShear = new ShearSpring(p, p->neighbor[NodeLocation::Up], p->neighbor[NodeLocation::Right], S, R, L);
+				ShearSpring* rightUpShear = new ShearSpring(p, p->neighbor[NodeLocation::Right], p->neighbor[NodeLocation::Up], S, R, L);
 				shear_springs.push_back(rightUpShear);
 			}
 
@@ -123,7 +124,7 @@ Cloth::Cloth(int w, int h, double _R, double _L)
 
 			if (p->neighbor[NodeLocation::Down] && p->neighbor[NodeLocation::Left])
 			{
-				ShearSpring* leftDownShear = new ShearSpring(p, p->neighbor[NodeLocation::Down], p->neighbor[NodeLocation::Left], S, R, L);
+				ShearSpring* leftDownShear = new ShearSpring(p, p->neighbor[NodeLocation::Left], p->neighbor[NodeLocation::Down], S, R, L);
 				shear_springs.push_back(leftDownShear);
 			}
 		}

@@ -10,13 +10,13 @@
 class ShearSpring
 {
 public:
-	ShearSpring(Node* n0, Node* n1, Node* n2, double _S, double _R, double _L);
+	ShearSpring(Node* n0, Node* n1, Node* n3, double _S, double _R, double _L);
 	virtual ~ShearSpring();
 
 	void solve();
 
 public:
-	Node *node0, *node1, *node2;
+	Node *node0, *node1, *node3;
 
 	double shearEnergy;
 	double S, R, L, Kx;

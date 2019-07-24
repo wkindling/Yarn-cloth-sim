@@ -6,8 +6,18 @@ using namespace Eigen;
 
 StretchSpring::StretchSpring(Node* n0, Node* n1, double _Y, double _R, YarnType type)
 {
-	node0 = n0;
-	node1 = n1;
+	//To ensure u1-u0>0 or v1-v0>0
+	if (type == Warp)
+	{
+		node0 = n0->u < n1->u ? n0 : n1;
+		node1 = n1->u > n0->u ? n1 : n0;
+	}
+	else if (type == Weft)
+	{
+		node0 = n0->v < n1->v ? n0 : n1;
+		node1 = n1->v > n0->v ? n1 : n0;
+	}
+
 	Y = _Y;
 	R = _R;
 
@@ -36,6 +46,8 @@ void StretchSpring::solveU()
 	Vector3d d = node1->position - node0->position; d.normalize();
 	Matrix3d I = Matrix3d::Identity();
 	Matrix3d P = I - d * d.transpose();
+
+	double V = 0.5*Ks*delta_u*(w.norm() - 1)*(w.norm() - 1);
 
 	//Compute and fill the force vector
 	Vector3d Fq1 = -Ks * (w.norm() - 1)*d;
@@ -80,6 +92,8 @@ void StretchSpring::solveV()
 
 	Matrix3d I = Matrix3d::Identity();
 	Matrix3d P = I - d * d.transpose();
+
+	double V = 0.5*Ks*delta_v*(w.norm() - 1)*(w.norm() - 1);
 
 	//Compute and fill the force vector
 	Vector3d Fq1 = -Ks * (w.norm() - 1)*d;
