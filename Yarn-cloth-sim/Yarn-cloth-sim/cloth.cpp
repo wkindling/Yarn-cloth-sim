@@ -198,7 +198,7 @@ void Cloth::computeForce()
 
 	for (int i = 0; i < bend_springs.size(); i++)
 	{
-		bend_springs[i]->solve();
+		bend_springs[i]->solve(_K, f);
 	}
 	
 	/*
@@ -211,12 +211,12 @@ void Cloth::computeForce()
 
 	for (int i = 0; i < shear_springs.size(); i++)
 	{
-		shear_springs[i]->solve();
+		shear_springs[i]->solve(_K, f);
 	}
 
 	for (int i = 0; i < parallel_contact_springs.size(); i++)
 	{
-		parallel_contact_springs[i]->solve();
+		parallel_contact_springs[i]->solve(_K, f);
 	}
 
 

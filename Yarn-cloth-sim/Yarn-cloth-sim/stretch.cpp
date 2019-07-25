@@ -221,8 +221,10 @@ void StretchSpring::draw()
 			glColor3d(0.9, 0.9, 0.9);
 			glLineWidth(2.0f);
 			glBegin(GL_LINES);
-			glVertex3d(node0->position.x(), node0->position.y(), node0->position.z() + R);
-			glVertex3d(node1->position.x(), node1->position.y(), node1->position.z() - R);
+			Vector3d pos0 = node0->position + node0->getNormal()*R;
+			Vector3d pos1 = node1->position - node1->getNormal()*R;
+			glVertex3d(pos0.x(), pos0.y(), pos0.z());
+			glVertex3d(pos1.x(), pos1.y(), pos1.z());
 			glEnd();
 		}
 		else if (node1->whichUp==Weft)
@@ -230,8 +232,10 @@ void StretchSpring::draw()
 			glColor3d(0.9, 0.9, 0.9);
 			glLineWidth(2.0f);
 			glBegin(GL_LINES);
-			glVertex3d(node0->position.x(), node0->position.y(), node0->position.z() - R);
-			glVertex3d(node1->position.x(), node1->position.y(), node1->position.z() + R);
+			Vector3d pos0 = node0->position - node0->getNormal()*R;
+			Vector3d pos1 = node1->position + node1->getNormal()*R;
+			glVertex3d(pos0.x(), pos0.y(), pos0.z());
+			glVertex3d(pos1.x(), pos1.y(), pos1.z());
 			glEnd();
 		}
 	}
@@ -242,8 +246,10 @@ void StretchSpring::draw()
 			glColor3d(0.9, 0.9, 0.9);
 			glLineWidth(2.0f);
 			glBegin(GL_LINES);
-			glVertex3d(node0->position.x(), node0->position.y(), node0->position.z() + R);
-			glVertex3d(node1->position.x(), node1->position.y(), node1->position.z() - R);
+			Vector3d pos0 = node0->position + node0->getNormal()*R;
+			Vector3d pos1 = node1->position - node1->getNormal()*R;
+			glVertex3d(pos0.x(), pos0.y(), pos0.z());
+			glVertex3d(pos1.x(), pos1.y(), pos1.z());
 			glEnd();
 		}
 		else if (node1->whichUp == Warp)
@@ -251,8 +257,10 @@ void StretchSpring::draw()
 			glColor3d(0.9, 0.9, 0.9);
 			glLineWidth(2.0f);
 			glBegin(GL_LINES);
-			glVertex3d(node0->position.x(), node0->position.y(), node0->position.z() - R);
-			glVertex3d(node1->position.x(), node1->position.y(), node1->position.z() + R);
+			Vector3d pos0 = node0->position - node0->getNormal()*R;
+			Vector3d pos1 = node1->position + node1->getNormal()*R;
+			glVertex3d(pos0.x(), pos0.y(), pos0.z());
+			glVertex3d(pos1.x(), pos1.y(), pos1.z());
 			glEnd();
 		}
 	}

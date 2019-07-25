@@ -36,6 +36,7 @@ public:
 	//Normal Node
 	Eigen::Vector3d position;
 	Eigen::Vector3d velocity;
+	Eigen::Vector3d normal;
 
 	Node* neighbor[4];
 
