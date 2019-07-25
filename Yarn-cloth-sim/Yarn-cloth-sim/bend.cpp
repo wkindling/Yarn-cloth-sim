@@ -41,11 +41,16 @@ void BendSpring::solve(vector<T>& _K, VectorXd& f)
 
 void BendSpring::solveU(vector<T>& _K, VectorXd& f)
 {
-	double l1 = (node1->position - node0->position).norm();
-	double l2 = (node2->position - node0->position).norm();
+	/*Offset to get crimp and then compute bending force*/
+	Vector3d pos0 = node0->position - R * node0->normal;
+	Vector3d pos1 = node1->position - R * node1->normal;
+	Vector3d pos2 = node2->position - R * node2->normal;
 
-	Vector3d d1 = node1->position - node0->position; d1.normalize();
-	Vector3d d2 = node2->position - node0->position; d2.normalize();
+	double l1 = (pos1 - pos0).norm();
+	double l2 = (pos2 - pos0).norm();
+
+	Vector3d d1 = pos1 - pos0; d1.normalize();
+	Vector3d d2 = pos2 - pos0; d2.normalize();
 
 	Matrix3d I = Matrix3d::Identity();
 	Matrix3d P1 = I - d1 * d1.transpose();
@@ -81,6 +86,10 @@ void BendSpring::solveU(vector<T>& _K, VectorXd& f)
 
 	f.segment<3>(index2) += Fq2;
 	f(index2 + 3) += Fu2;
+
+	node0->compressForce += 0.5*node0->normal.dot(Fq0);
+	node1->compressForce += 0.5*node1->normal.dot(Fq1);
+	node2->compressForce += 0.5*node2->normal.dot(Fq2);
 	
 	//Compute and fill the stiffness matrix
 	//The local stiffness matrix should be 15*15
@@ -191,11 +200,16 @@ void BendSpring::solveU(vector<T>& _K, VectorXd& f)
 
 void BendSpring::solveV(vector<T>& _K, VectorXd& f)
 {
-	double l1 = (node1->position - node0->position).norm();
-	double l2 = (node2->position - node0->position).norm();
+	/*Offset to get crimp and then compute bending force*/
+	Vector3d pos0 = node0->position + R * node0->normal;
+	Vector3d pos1 = node1->position + R * node1->normal;
+	Vector3d pos2 = node2->position + R * node2->normal;
 
-	Vector3d d1 = node1->position - node0->position; d1.normalize();
-	Vector3d d2 = node2->position - node0->position; d2.normalize();
+	double l1 = (pos1 - pos0).norm();
+	double l2 = (pos2 - pos0).norm();
+
+	Vector3d d1 = pos1 - pos0; d1.normalize();
+	Vector3d d2 = pos2 - pos0; d2.normalize();
 
 	Matrix3d I = Matrix3d::Identity();
 	Matrix3d P1 = I - d1 * d1.transpose();
@@ -231,6 +245,10 @@ void BendSpring::solveV(vector<T>& _K, VectorXd& f)
 
 	f.segment<3>(index2) += Fq2;
 	f(index2 + 4) += Fv2;
+
+	node0->compressForce -= 0.5*node0->normal.dot(Fq0);
+	node1->compressForce -= 0.5*node1->normal.dot(Fq1);
+	node2->compressForce -= 0.5*node2->normal.dot(Fq2);
 
 	//Compute and fill the stiffness matrix
 	//The local stiffness matrix should be 15*15

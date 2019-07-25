@@ -43,7 +43,8 @@ public:
 	//Cross Node
 	double u, v; // u for warp, v for weft. 
 	double anchorU, anchorV; // Initial u,v
-	
+	double compressForce;
+
 	Eigen::Vector2d velocityUV;
 
 	YarnType whichUp;

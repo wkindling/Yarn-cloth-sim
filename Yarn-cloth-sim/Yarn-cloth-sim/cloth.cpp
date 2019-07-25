@@ -63,6 +63,11 @@ void Cloth::build()
 		}
 	}
 
+	for (int i = 0; i < nodes.size(); i++)
+	{
+		nodes[i]->getNormal();
+	}
+
 	/*Add 4 kinds of Springs */
 	//Add stretch spring, avoid duplicate
 	for (int j = 0; j < height; j++)
@@ -186,11 +191,17 @@ void Cloth::computeInertia()
 
 void Cloth::computeForce()
 {
+	/* Initialize */
 	f.setZero();
 	K.setZero();
-
 	vector<T> _K;
 
+	for (int i = 0; i < nodes.size(); i++)
+	{
+		nodes[i]->compressForce = 0;
+	}
+
+	/* Compute stretching and bending, while storing compression force */
 	for (int i = 0; i < stretch_springs.size(); i++)
 	{
 		stretch_springs[i]->solve(_K, f);
@@ -200,14 +211,17 @@ void Cloth::computeForce()
 	{
 		bend_springs[i]->solve(_K, f);
 	}
-	
-	/*
-		Compute compression force here
-	*/
 
+	for (int i = 0; i < nodes.size(); i++)
+	{
+		if (nodes[i]->compressForce < 0) nodes[i]->compressForce = 0;
+	}
+
+	
 	/*
 		Compute friction force here
 	*/
+
 
 	for (int i = 0; i < shear_springs.size(); i++)
 	{
@@ -218,9 +232,6 @@ void Cloth::computeForce()
 	{
 		parallel_contact_springs[i]->solve(_K, f);
 	}
-
-
-
 }
 
 

@@ -65,6 +65,9 @@ void StretchSpring::solveU(vector<T>& _K, VectorXd& f)
 	f.segment<3>(index1) += Fq1;
 	f(index1 + 3) += Fu1;
 
+	node0->compressForce += 0.5*node0->normal.dot(Fq0);
+	node1->compressForce += 0.5*node1->normal.dot(Fq1);
+
 	/* Compute and fill the stiffness matrix */
 	//The local stiffness matrix should be 10*10
 	Matrix3d Fq1dq1 = Ks / l * P - Ks / delta_u * I;
@@ -153,6 +156,9 @@ void StretchSpring::solveV(vector<T>& _K, VectorXd& f)
 	f.segment<3>(index1) += Fq1;
 	f(index1 + 4) += Fv1;
 
+	node0->compressForce -= 0.5*node0->normal.dot(Fq0);
+	node1->compressForce -= 0.5*node1->normal.dot(Fq1);
+
 	//Compute and fill the stiffness matrix
 	//The local stiffness matrix should be 10*10
 	Matrix3d Fq1dq1 = Ks / l * P - Ks / delta_v * I;
@@ -216,52 +222,24 @@ void StretchSpring::draw()
 {
 	if (springType == Weft)
 	{
-		if (node0->whichUp == Weft)
-		{
-			glColor3d(0.9, 0.9, 0.9);
-			glLineWidth(2.0f);
-			glBegin(GL_LINES);
-			Vector3d pos0 = node0->position + node0->getNormal()*R;
-			Vector3d pos1 = node1->position - node1->getNormal()*R;
-			glVertex3d(pos0.x(), pos0.y(), pos0.z());
-			glVertex3d(pos1.x(), pos1.y(), pos1.z());
-			glEnd();
-		}
-		else if (node1->whichUp==Weft)
-		{
-			glColor3d(0.9, 0.9, 0.9);
-			glLineWidth(2.0f);
-			glBegin(GL_LINES);
-			Vector3d pos0 = node0->position - node0->getNormal()*R;
-			Vector3d pos1 = node1->position + node1->getNormal()*R;
-			glVertex3d(pos0.x(), pos0.y(), pos0.z());
-			glVertex3d(pos1.x(), pos1.y(), pos1.z());
-			glEnd();
-		}
+		glColor3d(0.9, 0.9, 0.9);
+		glLineWidth(2.0f);
+		glBegin(GL_LINES);
+		Vector3d pos0 = node0->position + node0->normal*R;
+		Vector3d pos1 = node1->position + node1->normal*R;
+		glVertex3d(pos0.x(), pos0.y(), pos0.z());
+		glVertex3d(pos1.x(), pos1.y(), pos1.z());
+		glEnd();
 	}
-	else if (springType==Warp)
+	else if (springType == Warp)
 	{
-		if (node0->whichUp == Warp)
-		{
-			glColor3d(0.9, 0.9, 0.9);
-			glLineWidth(2.0f);
-			glBegin(GL_LINES);
-			Vector3d pos0 = node0->position + node0->getNormal()*R;
-			Vector3d pos1 = node1->position - node1->getNormal()*R;
-			glVertex3d(pos0.x(), pos0.y(), pos0.z());
-			glVertex3d(pos1.x(), pos1.y(), pos1.z());
-			glEnd();
-		}
-		else if (node1->whichUp == Warp)
-		{
-			glColor3d(0.9, 0.9, 0.9);
-			glLineWidth(2.0f);
-			glBegin(GL_LINES);
-			Vector3d pos0 = node0->position - node0->getNormal()*R;
-			Vector3d pos1 = node1->position + node1->getNormal()*R;
-			glVertex3d(pos0.x(), pos0.y(), pos0.z());
-			glVertex3d(pos1.x(), pos1.y(), pos1.z());
-			glEnd();
-		}
+		glColor3d(0.9, 0.9, 0.9);
+		glLineWidth(2.0f);
+		glBegin(GL_LINES);
+		Vector3d pos0 = node0->position - node0->normal*R;
+		Vector3d pos1 = node1->position - node1->normal*R;
+		glVertex3d(pos0.x(), pos0.y(), pos0.z());
+		glVertex3d(pos1.x(), pos1.y(), pos1.z());
+		glEnd();
 	}
 }
