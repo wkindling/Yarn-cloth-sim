@@ -4,6 +4,7 @@
 
 #include <Eigen/Dense>
 #include <Eigen/Sparse>
+#include <vector>
 
 #include "node.h"
 
@@ -13,9 +14,9 @@ public:
 	ParallelContactSpring(Node* n0, Node* n1, double _Kc, double _R, double _L, YarnType type);
 	virtual ~ParallelContactSpring();
 
-	void solve();
-	void solveU();
-	void solveV();
+	void solve(std::vector<T>& _K, Eigen::VectorXd& f);
+	void solveU(std::vector<T>& _K, Eigen::VectorXd& f);
+	void solveV(std::vector<T>& _K, Eigen::VectorXd& f);
 
 public:
 	Node *node0, *node1;

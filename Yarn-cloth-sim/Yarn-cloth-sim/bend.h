@@ -4,6 +4,7 @@
 
 #include <Eigen/Dense>
 #include <Eigen/Sparse>
+#include <vector>
 
 #include "node.h"
 
