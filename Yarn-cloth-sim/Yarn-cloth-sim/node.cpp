@@ -103,3 +103,41 @@ Vector3d Node::getNormal()
 
 	return normal;
 }
+
+/* Compute friction force */
+// Ignore damping force yet ... Because damping force may have some influence on global motion equation
+// Currently I ignore the computation of Jacobians for friction because it is too complicated
+double Node::getFriction(double mu, double Kf, vector<T>& _K, VectorXd& f)
+{
+	double friction_u = 0, friction_v = 0;
+	double limit = mu * compressForce;
+
+	//Maybe I need to fill the stiffness matrix again due to friction
+	/* Get friction in warp direction */
+	double hat_fu = -Kf * (u - anchorU);
+	
+	if (hat_fu <= limit)
+	{
+		friction_u = hat_fu;
+	}
+	else
+	{
+		friction_u = -sign(u - anchorU)*mu*compressForce;
+	}
+
+	f(index * 5 + 3) += friction_u;
+
+	/* Get friction in weft direction */
+	double hat_fv = -Kf * (v - anchorV);
+	
+	if (hat_fv <= limit)
+	{
+		friction_v = hat_fv;
+	}
+	else
+	{
+		friction_v = -sign(v - anchorV)*mu*compressForce;
+	}
+
+	f(index * 5 + 4) += friction_v;
+}

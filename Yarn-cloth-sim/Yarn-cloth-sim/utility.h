@@ -12,4 +12,6 @@ typedef Eigen::Triplet<double> T;
 
 void fillBlock(std::vector<T>& _K, Eigen::MatrixXd& block, int index0, int index1);
 
+int sign(double number);
+
 #endif

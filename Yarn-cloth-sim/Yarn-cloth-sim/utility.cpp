@@ -10,3 +10,8 @@ void fillBlock(std::vector<T>& _K, Eigen::MatrixXd& block, int index0, int index
 		}
 	}
 }
+
+int sign(double number)
+{
+	return number >= 0 ? 1 : -1;
+}

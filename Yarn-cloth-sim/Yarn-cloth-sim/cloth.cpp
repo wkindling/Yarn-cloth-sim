@@ -217,10 +217,10 @@ void Cloth::computeForce()
 		if (nodes[i]->compressForce < 0) nodes[i]->compressForce = 0;
 	}
 
-	
 	/*
 		Compute friction force here
 	*/
+
 
 
 	for (int i = 0; i < shear_springs.size(); i++)
