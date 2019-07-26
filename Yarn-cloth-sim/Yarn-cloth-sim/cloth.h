@@ -15,16 +15,16 @@ class BendSpring;
 class Cloth
 {
 public:
-	Cloth(int w, int h, double _R, double _L);
+	Cloth(int w, int h, double _R, double _L, double _mu, double _rho, double _Y, double _B, double _S, double _Kc, double _Kf);
 	virtual ~Cloth();
 
 	void build();
-	void step();
+	void step(double h);
 	void draw();
 
 	void computeForce();
 	void computeInertia();
-	void solve();
+	void solve(double h);
 	
 public:
 	int width, height;

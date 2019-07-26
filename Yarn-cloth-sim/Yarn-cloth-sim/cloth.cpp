@@ -10,12 +10,20 @@
 using namespace std;
 using namespace Eigen;
 
-Cloth::Cloth(int w, int h, double _R, double _L)
+Cloth::Cloth(int w, int h, double _R, double _L, double _mu, double _rho, double _Y, double _B, double _S, double _Kc, double _Kf)
 {
 	width = w;
 	height = h;
 	R = _R;
 	L = _L;
+	mu = _mu;
+	rho = _rho;
+
+	Y = _Y;
+	B = _B;
+	S = _S;
+	Kc = _Kc;
+	Kf = _Kf;
 
 	int cindex = 0;
 	int nindex = 0;
@@ -26,7 +34,6 @@ Cloth::Cloth(int w, int h, double _R, double _L)
 	cout << "Inter-Yarn Distance : " << L << endl;
 	
 	build();
-
 }
 
 Cloth::~Cloth() {}
@@ -347,6 +354,41 @@ void Cloth::draw()
 	}
 }
 
+void Cloth::step(double h)
+{
+	for (int i = 0; i < nodes.size(); i++)
+	{
+		nodes[i]->getNormal();
+	}
+
+	computeInertia();
+
+	computeForce();
+
+	solve(h);
+
+	/* Update */
+	for (int i = 0; i < nodes.size(); i++)
+	{
+		nodes[i]->velocity = v.segment<3>(nodes[i]->index * 5);
+		nodes[i]->velocityUV.x() = v(nodes[i]->index * 5 + 3);
+		nodes[i]->velocityUV.y() = v(nodes[i]->index * 5 + 4);
+
+		nodes[i]->position = nodes[i]->position + nodes[i]->velocity*h;
+
+		nodes[i]->u = nodes[i]->u + nodes[i]->velocityUV.x()*h;
+		nodes[i]->v = nodes[i]->v + nodes[i]->velocityUV.y()*h;
+	}
+}
 
 
 
+void Cloth::solve(double h)
+{
+	SparseMatrix<double> A = M - h * h*K;
+	VectorXd b = M * v + h * f;
+	
+	LeastSquaresConjugateGradient<SparseMatrix<double>> lscg;
+	lscg.compute(A);
+	v = lscg.solve(b);
+}

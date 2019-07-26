@@ -13,8 +13,22 @@ using namespace Eigen;
 double mouseX = 0, mouseY = 0;
 bool firstMouse = true;
 
+/* ---Parameters--- */
+int cloth_width = 15;
+int cloth_height = 15;
+double R = 0.05;
+double L = 0.5;
+double mu = 0.5;
+double rho = 1;
+double Y;
+double B;
+double S;
+double Kc;
+double Kf;
+/*-------------------*/
+
 Camera camera(glm::vec3(12, 11, 5), glm::vec3(0,0,1),-132,-17);
-Cloth cloth(15, 15, 0.05, 0.5);
+Cloth cloth(cloth_width, cloth_height, R, L, mu, rho, Y, B, S, Kc, Kf);
 
 void init()
 {
