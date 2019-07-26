@@ -181,14 +181,117 @@ void Cloth::build()
 	K.setZero();
 }
 
+/* Fill the generalized mass matrix */
 void Cloth::computeInertia()
 {
+	M.setZero();
+	vector<T> _M;
+	for (int i = 0; i < stretch_springs.size(); i++)
+	{
+		Node* n0 = stretch_springs[i]->node0;
+		Node* n1 = stretch_springs[i]->node1;
 
+		int index0 = n0->index * 5;
+		int index1 = n1->index * 5;
 
+		Matrix3d I = Matrix3d::Identity();
 
+		if (stretch_springs[i]->springType == Warp)
+		{
+			double delta_u = n1->u - n0->u;
+			Vector3d w = (n1->position - n0->position) / delta_u;
+
+			MatrixXd m00;
+			m00.resize(5, 5);
+			m00.setZero();
+			m00.block<3, 3>(0, 0) = 2 * I;
+			m00.block<3, 1>(0, 3) = -2 * w;
+			m00.block<1, 3>(3, 0) = -2 * w.transpose();
+			m00(3, 3) = 2 * w.dot(w);
+			m00 = rho * delta_u / 6.0*m00;
+			fillBlock(_M, m00, index0, index0);
+
+			MatrixXd m01;
+			m01.resize(5, 5);
+			m01.setZero();
+			m01.block<3, 3>(0, 0) = I;
+			m01.block<3, 1>(0, 3) = -w;
+			m01.block<1, 3>(3, 0) = -w.transpose();
+			m01(3, 3) = w.dot(w);
+			m01 = rho * delta_u / 6.0*m01;
+			fillBlock(_M, m01, index0, index1);
+
+			MatrixXd m10;
+			m10.resize(5, 5);
+			m10.setZero();
+			m10.block<3, 3>(0, 0) = I;
+			m10.block<3, 1>(0, 3) = -w;
+			m10.block<1, 3>(3, 0) = -w.transpose();
+			m10(3, 3) = w.dot(w);
+			m10 = rho * delta_u / 6.0*m10;
+			fillBlock(_M, m10, index1, index0);
+
+			MatrixXd m11;
+			m11.resize(5, 5);
+			m11.setZero();
+			m11.block<3, 3>(0, 0) = 2 * I;
+			m11.block<3, 1>(0, 3) = -2 * w;
+			m11.block<1, 3>(3, 0) = -2 * w.transpose();
+			m11(3, 3) = 2 * w.dot(w);
+			m11 = rho * delta_u / 6.0*m11;
+			fillBlock(_M, m11, index1, index1);
+		}
+		else if (stretch_springs[i]->springType == Weft)
+		{
+			double delta_v = n1->v - n0->v;
+			Vector3d w = (n1->position - n0->position) / delta_v;
+
+			MatrixXd m00;
+			m00.resize(5, 5);
+			m00.setZero();
+			m00.block<3, 3>(0, 0) = 2 * I;
+			m00.block<3, 1>(0, 4) = -2 * w;
+			m00.block<1, 3>(4, 0) = -2 * w.transpose();
+			m00(4, 4) = 2 * w.dot(w);
+			m00 = rho * delta_v / 6.0*m00;
+			fillBlock(_M, m00, index0, index0);
+
+			MatrixXd m01;
+			m01.resize(5, 5);
+			m01.setZero();
+			m01.block<3, 3>(0, 0) = I;
+			m01.block<3, 1>(0, 4) = -w;
+			m01.block<1, 3>(4, 0) = -w.transpose();
+			m01(4, 4) = w.dot(w);
+			m01 = rho * delta_v / 6.0*m01;
+			fillBlock(_M, m01, index0, index1);
+
+			MatrixXd m10;
+			m10.resize(5, 5);
+			m10.setZero();
+			m10.block<3, 3>(0, 0) = I;
+			m10.block<3, 1>(0, 4) = -w;
+			m10.block<1, 3>(4, 0) = -w.transpose();
+			m10(4, 4) = w.dot(w);
+			m10 = rho * delta_v / 6.0*m10;
+			fillBlock(_M, m10, index1, index0);
+
+			MatrixXd m11;
+			m11.resize(5, 5);
+			m11.setZero();
+			m11.block<3, 3>(0, 0) = 2 * I;
+			m11.block<3, 1>(0, 4) = -2 * w;
+			m11.block<1, 3>(4, 0) = -2 * w.transpose();
+			m11(4, 4) = 2 * w.dot(w);
+			m11 = rho * delta_v / 6.0*m11;
+			fillBlock(_M, m11, index1, index1);
+		}
+	}
+
+	M.setFromTriplets(_M.begin(), _M.end());
 }
 
-
+/* Fill the stiffness matrix and force vector */
 void Cloth::computeForce()
 {
 	/* Initialize */
@@ -217,11 +320,10 @@ void Cloth::computeForce()
 		if (nodes[i]->compressForce < 0) nodes[i]->compressForce = 0;
 	}
 
-	/*
-		Compute friction force here
-	*/
-
-
+	for (int i = 0; i < nodes.size(); i++)
+	{
+		nodes[i]->getFriction(mu, Kf, _K, f);
+	}
 
 	for (int i = 0; i < shear_springs.size(); i++)
 	{
@@ -232,6 +334,8 @@ void Cloth::computeForce()
 	{
 		parallel_contact_springs[i]->solve(_K, f);
 	}
+
+	K.setFromTriplets(_K.begin(), _K.end());
 }
 
 

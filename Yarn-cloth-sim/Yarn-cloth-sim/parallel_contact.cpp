@@ -49,7 +49,7 @@ void ParallelContactSpring::solveU(vector<T>& _K, VectorXd& f)
 	Matrix3d I = Matrix3d::Identity();
 	Matrix3d P = I - d1 * d1.transpose();
 
-	double V = 0.5*Kc*L*(delta_u - d)*(delta_u - d);
+	parallelContactEnergy = 0.5*Kc*L*(delta_u - d)*(delta_u - d);
 
 	int index0 = node0->index * 5;
 	int index1 = node1->index * 5;
@@ -86,7 +86,7 @@ void ParallelContactSpring::solveV(vector<T>& _K, VectorXd& f)
 	Matrix3d I = Matrix3d::Identity();
 	Matrix3d P = I - d1 * d1.transpose();
 
-	double V = 0.5*Kc*L*(delta_v - d)*(delta_v - d);
+	parallelContactEnergy = 0.5*Kc*L*(delta_v - d)*(delta_v - d);
 
 	int index0 = node0->index * 5;
 	int index1 = node1->index * 5;

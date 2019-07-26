@@ -39,7 +39,7 @@ void ShearSpring::solve(vector<T>& _K, VectorXd& f)
 
 	double phi = acos(d1.dot(d3));
 
-	double V = 0.5*Kx*L*(phi - M_PI / 2.0)*(phi - M_PI / 2.0);
+	shearEnergy = 0.5*Kx*L*(phi - M_PI / 2.0)*(phi - M_PI / 2.0);
 
 	int index0 = node0->index * 5;
 	int index1 = node1->index * 5;

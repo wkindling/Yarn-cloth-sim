@@ -62,7 +62,7 @@ void BendSpring::solveU(vector<T>& _K, VectorXd& f)
 	double u1 = node1->u;
 	double u2 = node2->u;
 
-	double V = Kb * (theta*theta) / abs(u1 - u2);
+	bendEnergy = Kb * (theta*theta) / abs(u1 - u2);
 	
 	int index0 = node0->index * 5;
 	int index1 = node1->index * 5;
@@ -221,7 +221,7 @@ void BendSpring::solveV(vector<T>& _K, VectorXd& f)
 	double v1 = node1->v;
 	double v2 = node2->v;
 
-	double V = Kb * (theta*theta) / abs(v1 - v2);
+	bendEnergy = Kb * (theta*theta) / abs(v1 - v2);
 
 	int index0 = node0->index * 5;
 	int index1 = node1->index * 5;

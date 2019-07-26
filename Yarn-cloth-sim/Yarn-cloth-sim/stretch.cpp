@@ -47,7 +47,7 @@ void StretchSpring::solveU(vector<T>& _K, VectorXd& f)
 	Matrix3d I = Matrix3d::Identity();
 	Matrix3d P = I - d * d.transpose();
 
-	double V = 0.5*Ks*delta_u*(w.norm() - 1)*(w.norm() - 1);
+	stretchEnergy = 0.5*Ks*delta_u*(w.norm() - 1)*(w.norm() - 1);
 
 	int index0 = node0->index * 5;
 	int index1 = node1->index * 5;
@@ -138,7 +138,7 @@ void StretchSpring::solveV(vector<T>& _K, VectorXd& f)
 	Matrix3d I = Matrix3d::Identity();
 	Matrix3d P = I - d * d.transpose();
 
-	double V = 0.5*Ks*delta_v*(w.norm() - 1)*(w.norm() - 1);
+	stretchEnergy = 0.5*Ks*delta_v*(w.norm() - 1)*(w.norm() - 1);
 
 	int index0 = node0->index * 5;
 	int index1 = node1->index * 5;
@@ -225,19 +225,51 @@ void StretchSpring::draw()
 		glColor3d(0.9, 0.9, 0.9);
 		glLineWidth(2.0f);
 		glBegin(GL_LINES);
-		Vector3d pos0 = node0->position + node0->normal*R;
-		Vector3d pos1 = node1->position + node1->normal*R;
+		Vector3d pos0, pos1;
+		if (node0->neighbor[NodeLocation::Up] && node0->neighbor[NodeLocation::Down] && node0->neighbor[NodeLocation::Right] && node0->neighbor[NodeLocation::Left])
+		{
+			pos0 = node0->position + node0->normal*R;
+		}
+		else
+		{
+			pos0 = node0->position;
+		}
+
+		if (node1->neighbor[NodeLocation::Up] && node1->neighbor[NodeLocation::Down] && node1->neighbor[NodeLocation::Right] && node1->neighbor[NodeLocation::Left])
+		{
+			pos1 = node1->position + node1->normal*R;
+		}
+		else
+		{
+			pos1 = node1->position;
+		}
 		glVertex3d(pos0.x(), pos0.y(), pos0.z());
 		glVertex3d(pos1.x(), pos1.y(), pos1.z());
 		glEnd();
 	}
 	else if (springType == Warp)
 	{
-		glColor3d(0.9, 0.9, 0.9);
+		glColor3d(0.9, 0.6, 0.3);
 		glLineWidth(2.0f);
 		glBegin(GL_LINES);
-		Vector3d pos0 = node0->position - node0->normal*R;
-		Vector3d pos1 = node1->position - node1->normal*R;
+		Vector3d pos0, pos1;
+		if (node0->neighbor[NodeLocation::Up] && node0->neighbor[NodeLocation::Down] && node0->neighbor[NodeLocation::Right] && node0->neighbor[NodeLocation::Left])
+		{
+			pos0 = node0->position - node0->normal*R;
+		}
+		else
+		{
+			pos0 = node0->position;
+		}
+
+		if (node1->neighbor[NodeLocation::Up] && node1->neighbor[NodeLocation::Down] && node1->neighbor[NodeLocation::Right] && node1->neighbor[NodeLocation::Left])
+		{
+			pos1 = node1->position - node1->normal*R;
+		}
+		else
+		{
+			pos1 = node1->position;
+		}		
 		glVertex3d(pos0.x(), pos0.y(), pos0.z());
 		glVertex3d(pos1.x(), pos1.y(), pos1.z());
 		glEnd();

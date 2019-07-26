@@ -28,8 +28,8 @@ public:
 	
 public:
 	int width, height;
-	double R, L;
-	double Y, B, S, Kc;
+	double R, L, mu, rho;
+	double Y, B, S, Kc, Kf;
 
 	std::vector<Node*> nodes;
 
