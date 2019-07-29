@@ -4,7 +4,7 @@
 
 I have implemented all the forces mentioned in the paper, and got the following result.
 
-<img src="ani.png">
+<img src="ani.png" width="60%">
 
 This animation seems right but not robust as time steps increase.
 
