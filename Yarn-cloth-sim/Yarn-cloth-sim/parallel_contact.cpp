@@ -43,6 +43,8 @@ void ParallelContactSpring::solveU(vector<T>& _K, VectorXd& f)
 	double l = (node1->position - node0->position).norm();
 	double delta_u = abs(node1->u - node0->u);
 
+	if (delta_u >= d) return;
+
 	Vector3d d1 = node1->position - node0->position; d1.normalize();
 	Vector3d w = (node1->position - node0->position) / delta_u;
 
@@ -79,6 +81,8 @@ void ParallelContactSpring::solveV(vector<T>& _K, VectorXd& f)
 {
 	double l = (node1->position - node0->position).norm();
 	double delta_v = abs(node1->v - node0->v);
+
+	if (delta_v >= d) return;
 
 	Vector3d d1 = node1->position - node0->position; d1.normalize();
 	Vector3d w = (node1->position - node0->position) / delta_v;

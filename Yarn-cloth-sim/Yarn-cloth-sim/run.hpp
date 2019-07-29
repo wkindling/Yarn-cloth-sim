@@ -14,17 +14,17 @@ double mouseX = 0, mouseY = 0;
 bool firstMouse = true;
 
 /* ---Parameters--- */
-int cloth_width = 15;
-int cloth_height = 15;
+int cloth_width = 10;
+int cloth_height = 10;
 double R = 0.05;
 double L = 0.5;
-double mu = 0.5;
+double mu = 8e3;
 double rho = 1;
-double Y;
-double B;
-double S;
-double Kc;
-double Kf;
+double Y = 1e8;
+double B = 1e-1;
+double S = 1e5;
+double Kc = 1e10;
+double Kf = 8e3;
 /*-------------------*/
 
 Camera camera(glm::vec3(12, 11, 5), glm::vec3(0,0,1),-132,-17);
@@ -86,6 +86,7 @@ void display()
 	glVertex3d(0, 0, 10);
 	glEnd();
 
+	cloth.step(0.001);
 	cloth.draw();
 
 	glutPostRedisplay();
@@ -127,6 +128,7 @@ void mykeyboard(unsigned char key, int x, int y)
 		case 'a': camera.translate(LEFT, 0.08); break;
 		case 's': camera.translate(BACKWARD, 0.08); break;
 		case 'd': camera.translate(RIGHT, 0.08); break;
+		case 'm': cloth.step(0.0001);
 	}
 	glutPostRedisplay();
 }

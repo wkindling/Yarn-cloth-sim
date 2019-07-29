@@ -18,6 +18,7 @@ Node::Node(Vector3d pos, double _u, double _v)
 	normal.setZero();
 	compressForce = 0;
 	//whichUp and index assigned externally
+
 }
 
 Node::~Node() {}
@@ -107,7 +108,7 @@ Vector3d Node::getNormal()
 /* Compute friction force */
 // Ignore damping force yet ... Because damping force may have some influence on global motion equation
 // Currently I ignore the computation of Jacobians for friction because it is too complicated
-double Node::getFriction(double mu, double Kf, vector<T>& _K, VectorXd& f)
+void Node::getFriction(double mu, double Kf, vector<T>& _K, VectorXd& f)
 {
 	double friction_u = 0, friction_v = 0;
 	double limit = mu * compressForce;

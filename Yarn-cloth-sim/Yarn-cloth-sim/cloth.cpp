@@ -6,6 +6,7 @@
 #include "shear.h"
 
 #include <iostream>
+#include <freeglut.h>
 
 using namespace std;
 using namespace Eigen;
@@ -45,7 +46,7 @@ void Cloth::build()
 	{
 		for (int i = 0; i < width; i++) // v for weft (y)
 		{
-			Node* node = new Node(Vector3d(i*L, j*L, 0), i*L, j*L);
+			Node* node = new Node(Vector3d(0, i*L, -j*L), i*L, j*L);
 
 			if ((i + j) % 2 == 0)
 			{
@@ -299,7 +300,7 @@ void Cloth::computeInertia()
 }
 
 /* Fill the stiffness matrix and force vector */
-void Cloth::computeForce()
+void Cloth::computeForce(Vector3d gravity)
 {
 	/* Initialize */
 	f.setZero();
@@ -332,6 +333,28 @@ void Cloth::computeForce()
 		nodes[i]->getFriction(mu, Kf, _K, f);
 	}
 
+	for (int i = 0; i < stretch_springs.size(); i++)
+	{
+		Node* n0 = stretch_springs[i]->node0;
+		Node* n1 = stretch_springs[i]->node1;
+
+		int index0 = n0->index * 5;
+		int index1 = n1->index * 5;
+
+		if (stretch_springs[i]->springType == Warp)
+		{
+			double delta_u = n1->u - n0->u;
+			f.segment<3>(index0) += 0.5*rho*delta_u*gravity;
+			f.segment<3>(index1) += 0.5*rho*delta_u*gravity;
+		}
+		else if (stretch_springs[i]->springType == Weft)
+		{
+			double delta_v = n1->v - n0->v;
+			f.segment<3>(index0) += 0.5*rho*delta_v*gravity;
+			f.segment<3>(index1) += 0.5*rho*delta_v*gravity;
+		}
+	}
+
 	for (int i = 0; i < shear_springs.size(); i++)
 	{
 		shear_springs[i]->solve(_K, f);
@@ -352,6 +375,15 @@ void Cloth::draw()
 	{
 		stretch_springs[i]->draw();
 	}
+
+	for (int i = 0; i < nodes.size(); i++)
+	{
+		glPointSize(5.0f);
+		glColor3d(0.8, 0, 0);
+		glBegin(GL_POINTS);
+		glVertex3d(nodes[i]->position.x(),nodes[i]->position.y(),nodes[i]->position.z());
+		glEnd();
+	}
 }
 
 void Cloth::step(double h)
@@ -363,13 +395,21 @@ void Cloth::step(double h)
 
 	computeInertia();
 
-	computeForce();
+	computeForce(Vector3d(0,0,-9.8));
 
 	solve(h);
 
 	/* Update */
 	for (int i = 0; i < nodes.size(); i++)
 	{
+		if (i == 0 || i == width-1)
+		{
+			v.segment<3>(nodes[i]->index * 5) = Vector3d::Zero();
+			v(nodes[i]->index * 5 + 3) = 0;
+			v(nodes[i]->index * 5 + 4) = 0;
+			continue;
+		}
+		
 		nodes[i]->velocity = v.segment<3>(nodes[i]->index * 5);
 		nodes[i]->velocityUV.x() = v(nodes[i]->index * 5 + 3);
 		nodes[i]->velocityUV.y() = v(nodes[i]->index * 5 + 4);

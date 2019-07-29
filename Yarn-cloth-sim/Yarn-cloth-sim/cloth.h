@@ -22,7 +22,7 @@ public:
 	void step(double h);
 	void draw();
 
-	void computeForce();
+	void computeForce(Eigen::Vector3d gravity);
 	void computeInertia();
 	void solve(double h);
 	
