@@ -46,7 +46,7 @@ void Cloth::build()
 	{
 		for (int i = 0; i < width; i++) // v for weft (y)
 		{
-			Node* node = new Node(Vector3d(0, i*L, -j*L), i*L, j*L);
+			Node* node = new Node(Vector3d(i*L, j*L, 0), i*L, j*L);
 
 			if ((i + j) % 2 == 0)
 			{
@@ -402,7 +402,7 @@ void Cloth::step(double h)
 	/* Update */
 	for (int i = 0; i < nodes.size(); i++)
 	{
-		if (i == 0 || i == width-1)
+		if (i <width)
 		{
 			v.segment<3>(nodes[i]->index * 5) = Vector3d::Zero();
 			v(nodes[i]->index * 5 + 3) = 0;
@@ -428,7 +428,8 @@ void Cloth::solve(double h)
 	SparseMatrix<double> A = M - h * h*K;
 	VectorXd b = M * v + h * f;
 	
-	LeastSquaresConjugateGradient<SparseMatrix<double>> lscg;
+	ConjugateGradient<SparseMatrix<double>, Lower | Upper> lscg;
 	lscg.compute(A);
 	v = lscg.solve(b);
+	if (lscg.info() != Success) cout << "Failed" << endl;
 }
