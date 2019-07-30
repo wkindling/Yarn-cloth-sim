@@ -1,5 +1,6 @@
 #include "stretch.h"
 #include <freeglut.h>
+#include <iostream>
 
 using namespace std;
 using namespace Eigen;
@@ -28,16 +29,16 @@ StretchSpring::StretchSpring(Node* n0, Node* n1, double _Y, double _R, YarnType 
 
 StretchSpring::~StretchSpring() {}
 
-void StretchSpring::solve(vector<T>& _K, VectorXd& f)
+void StretchSpring::solve(vector<T>& _K, VectorXd& f, int nodes_size)
 {
-	if (springType == Weft) solveV(_K, f);
+	if (springType == Weft) solveV(_K, f, nodes_size);
 	
-	else if (springType == Warp) solveU(_K, f);
+	else if (springType == Warp) solveU(_K, f, nodes_size);
 
 	return;
 }
 
-void StretchSpring::solveU(vector<T>& _K, VectorXd& f)
+void StretchSpring::solveU(vector<T>& _K, VectorXd& f, int nodes_size)
 {
 	double l = (node1->position - node0->position).norm();
 	double delta_u = abs(node1->u - node0->u);
@@ -49,89 +50,100 @@ void StretchSpring::solveU(vector<T>& _K, VectorXd& f)
 
 	stretchEnergy = 0.5*Ks*delta_u*(w.norm() - 1)*(w.norm() - 1);
 
-	int index0 = node0->index * 5;
-	int index1 = node1->index * 5;
+	int node_index0 = node0->node_index * 3;
+	int node_index1 = node1->node_index * 3;
 
 	/* Compute and fill the force vector */
 	Vector3d Fq1 = -Ks * (w.norm() - 1)*d;
 	Vector3d Fq0 = -Fq1;
-
-	double Fu1 = 0.5*Ks*(w.norm()*w.norm() - 1);
-	double Fu0 = -Fu1;
 	
-	f.segment<3>(index0) += Fq0;
-	f(index0 + 3) += Fu0;
-
-	f.segment<3>(index1) += Fq1;
-	f(index1 + 3) += Fu1;
+	f.segment<3>(node_index0) += Fq0;
+	f.segment<3>(node_index1) += Fq1;
 
 	node0->compressForce += 0.5*node0->normal.dot(Fq0);
 	node1->compressForce += 0.5*node1->normal.dot(Fq1);
 
+	if (!node0->onBorder)
+	{
+		double Fu0 = -0.5*Ks*(w.norm()*w.norm() - 1);
+		int cross_index0 = nodes_size * 3 + node0->cross_index * 2;
+		f(cross_index0) += Fu0;
+	}
+
+	if (!node1->onBorder)
+	{
+		double Fu1 = 0.5*Ks*(w.norm()*w.norm() - 1);
+		int cross_index1 = nodes_size * 3 + node1->cross_index * 2;
+		f(cross_index1) += Fu1;
+	}
+
 	/* Compute and fill the stiffness matrix */
-	//The local stiffness matrix should be 10*10
-	Matrix3d Fq1dq1 = Ks / l * P - Ks / delta_u * I;
-	Matrix3d Fq0dq0 = Fq1dq1;
-	Matrix3d Fq1dq0 = -Fq1dq1;
-	Matrix3d Fq0dq1 = Fq1dq0;
+	/* Lagrange Part */
+	MatrixXd Fq1dq1 = Ks / l * P - Ks / delta_u * I;
+	MatrixXd Fq0dq0 = Fq1dq1;
+	MatrixXd Fq1dq0 = -Fq1dq1;
+	MatrixXd Fq0dq1 = Fq1dq0;
 
-	double Fu1du1 = -Ks * w.norm()*w.norm() / delta_u;
-	double Fu0du0 = Fu1du1;
-	double Fu1du0 = -Fu1du1;
-	double Fu0du1 = Fu1du0;
+	fillGlobal(_K, Fq1dq1, node_index1, node_index1);
+	fillGlobal(_K, Fq0dq0, node_index0, node_index0);
+	fillGlobal(_K, Fq1dq0, node_index1, node_index0);
+	fillGlobal(_K, Fq0dq1, node_index0, node_index1);
 
-	Vector3d Fq1du1 = Ks * w.norm() / delta_u * d;
-	Vector3d Fq0du0 = Fq1du1;
-	Vector3d Fq1du0 = -Fq1du1;
-	Vector3d Fq0du1 = Fq1du0;
+	/* Euler Part */
+	if (!node0->onBorder)
+	{
+		int cross_index0 = nodes_size * 3 + node0->cross_index * 2;
 
-	Vector3d Fu1dq1 = Ks / delta_u * w.transpose();
-	Vector3d Fu0dq0 = Fu1dq1;
-	Vector3d Fu1dq0 = -Fu1dq1;
-	Vector3d Fu0dq1 = Fu1dq0;
+		double Fu0du0 = -Ks * w.norm()*w.norm() / delta_u;
+		_K.push_back(T(cross_index0, cross_index0, Fu0du0));
+		
+		MatrixXd Fq0du0 = Ks * w.norm() / delta_u * d;
+		MatrixXd Fq1du0 = -Fq0du0;
+		fillGlobal(_K, Fq0du0, node_index0, cross_index0);
+		fillGlobal(_K, Fq1du0, node_index1, cross_index0);
 
-	MatrixXd f0q0;
-	f0q0.resize(5, 5);
-	f0q0.setZero();
-	f0q0.block<3, 3>(0, 0) = Fq0dq0;
-	f0q0.block<3, 1>(0, 3) = Fq0du0;
-	f0q0.block<1, 3>(3, 0) = Fu0dq0;
-	f0q0(3, 3) = Fu0du0;
-	fillBlock(_K, f0q0, index0, index0);
+		MatrixXd Fu0dq0 = Ks / delta_u * w.transpose();
+		MatrixXd Fu0dq1 = -Fu0dq0;
+		fillGlobal(_K, Fu0dq0, cross_index0, node_index0);
+		fillGlobal(_K, Fu0dq1, cross_index0, node_index1);
+	}
 
-	MatrixXd f0q1;
-	f0q1.resize(5, 5);
-	f0q1.setZero();
-	f0q1.block<3, 3>(0, 0) = Fq0dq1;
-	f0q1.block<3, 1>(0, 3) = Fq0du1;
-	f0q1.block<1, 3>(3, 0) = Fu0dq1;
-	f0q1(3, 3) = Fu0du1;
-	fillBlock(_K, f0q1, index0, index1);
+	if (!node1->onBorder)
+	{
+		int cross_index1 = nodes_size * 3 + node1->cross_index * 2;
+		
+		double Fu1du1 = -Ks * w.norm()*w.norm() / delta_u;
+		_K.push_back(T(cross_index1, cross_index1, Fu1du1));
+		
+		MatrixXd Fq1du1 = Ks * w.norm() / delta_u * d;
+		MatrixXd Fq0du1 = -Fq1du1;
+		fillGlobal(_K, Fq1du1, node_index1, cross_index1);
+		fillGlobal(_K, Fq0du1, node_index0, cross_index1);
 
-	MatrixXd f1q0;
-	f1q0.resize(5, 5);
-	f1q0.setZero();
-	f1q0.block<3, 3>(0, 0) = Fq1dq0;
-	f1q0.block<3, 1>(0, 3) = Fq1du0;
-	f1q0.block<1, 3>(3, 0) = Fu1dq0;
-	f1q0(3, 3) = Fu1du0;
-	fillBlock(_K, f1q0, index1, index0);
+		MatrixXd Fu1dq1 = Ks / delta_u * w.transpose();
+		MatrixXd Fu1dq0 = -Fu1dq1;
+		fillGlobal(_K, Fu1dq1, cross_index1, node_index1);
+		fillGlobal(_K, Fu1dq0, cross_index1, node_index0);
+	}
 
-	MatrixXd f1q1;
-	f1q1.resize(5, 5);
-	f1q1.setZero();
-	f1q1.block<3, 3>(0, 0) = Fq1dq1;
-	f1q1.block<3, 1>(0, 3) = Fq1du1;
-	f1q1.block<1, 3>(3, 0) = Fu1dq1;
-	f1q1(3, 3) = Fu1du1;
-	fillBlock(_K, f1q1, index1, index1);
+	if (!node0->onBorder && !node1->onBorder)
+	{
+		int cross_index0 = nodes_size * 3 + node0->cross_index * 2;
+		int cross_index1 = nodes_size * 3 + node1->cross_index * 2;
+
+		double Fu1du0 = Ks * w.norm()*w.norm() / delta_u;
+		double Fu0du1 = Fu1du0;
+
+		_K.push_back(T(cross_index1, cross_index0, Fu1du0));
+		_K.push_back(T(cross_index0, cross_index1, Fu0du1));
+	}
 }
 
-void StretchSpring::solveV(vector<T>& _K, VectorXd& f)
+void StretchSpring::solveV(vector<T>& _K, VectorXd& f, int nodes_size)
 {
 	double l = (node1->position - node0->position).norm();
 	double delta_v = abs(node1->v - node0->v);
-	
+
 	Vector3d w = (node1->position - node0->position) / delta_v;
 	Vector3d d = (node1->position - node0->position); d.normalize();
 
@@ -140,82 +152,93 @@ void StretchSpring::solveV(vector<T>& _K, VectorXd& f)
 
 	stretchEnergy = 0.5*Ks*delta_v*(w.norm() - 1)*(w.norm() - 1);
 
-	int index0 = node0->index * 5;
-	int index1 = node1->index * 5;
+	int node_index0 = node0->node_index * 3;
+	int node_index1 = node1->node_index * 3;
 
 	//Compute and fill the force vector
 	Vector3d Fq1 = -Ks * (w.norm() - 1)*d;
 	Vector3d Fq0 = -Fq1;
 
-	double Fv1 = 0.5*Ks*(w.norm()*w.norm() - 1);
-	double Fv0 = -Fv1;
-
-	f.segment<3>(index0) += Fq0;
-	f(index0 + 4) += Fv0;
-
-	f.segment<3>(index1) += Fq1;
-	f(index1 + 4) += Fv1;
+	f.segment<3>(node_index0) += Fq0;
+	f.segment<3>(node_index1) += Fq1;
 
 	node0->compressForce -= 0.5*node0->normal.dot(Fq0);
 	node1->compressForce -= 0.5*node1->normal.dot(Fq1);
 
+	if (!node0->onBorder)
+	{
+		double Fv0 = -0.5*Ks*(w.norm()*w.norm() - 1);
+		int cross_index0 = nodes_size * 3 + node0->cross_index * 2;
+		f(cross_index0 + 1) += Fv0;
+	}
+
+	if (!node1->onBorder)
+	{
+		double Fv1 = 0.5*Ks*(w.norm()*w.norm() - 1);
+		int cross_index1 = nodes_size * 3 + node1->cross_index * 2;
+		f(cross_index1 + 1) += Fv1;
+	}
+
 	//Compute and fill the stiffness matrix
-	//The local stiffness matrix should be 10*10
-	Matrix3d Fq1dq1 = Ks / l * P - Ks / delta_v * I;
-	Matrix3d Fq0dq0 = Fq1dq1;
-	Matrix3d Fq1dq0 = -Fq1dq1;
-	Matrix3d Fq0dq1 = Fq1dq0;
+	/* Lagrange Part */
+	MatrixXd Fq1dq1 = Ks / l * P - Ks / delta_v * I;
+	MatrixXd Fq0dq0 = Fq1dq1;
+	MatrixXd Fq1dq0 = -Fq1dq1;
+	MatrixXd Fq0dq1 = Fq1dq0;
 
-	double Fv1dv1 = -Ks * w.norm()*w.norm() / delta_v;
-	double Fv0dv0 = Fv1dv1;
-	double Fv1dv0 = -Fv1dv1;
-	double Fv0dv1 = Fv1dv0;
+	fillGlobal(_K, Fq1dq1, node_index1, node_index1);
+	fillGlobal(_K, Fq0dq0, node_index0, node_index0);
+	fillGlobal(_K, Fq1dq0, node_index1, node_index0);
+	fillGlobal(_K, Fq0dq1, node_index0, node_index1);
 
-	Vector3d Fq1dv1 = Ks * w.norm() / delta_v * d;
-	Vector3d Fq0dv0 = Fq1dv1;
-	Vector3d Fq1dv0 = -Fq1dv1;
-	Vector3d Fq0dv1 = Fq1dv0;
+	/* Euler Part */
+	if (!node0->onBorder)
+	{
+		int cross_index0 = nodes_size * 3 + node0->cross_index * 2;
 
-	Vector3d Fv1dq1 = Ks / delta_v * w.transpose();
-	Vector3d Fv0dq0 = Fv1dq1;
-	Vector3d Fv1dq0 = -Fv1dq1;
-	Vector3d Fv0dq1 = Fv1dq0;
+		double Fv0dv0 = -Ks * w.norm()*w.norm() / delta_v;
+		_K.push_back(T(cross_index0 + 1, cross_index0 + 1, Fv0dv0));
 
-	MatrixXd f0q0;
-	f0q0.resize(5, 5);
-	f0q0.setZero();
-	f0q0.block<3, 3>(0, 0) = Fq0dq0;
-	f0q0.block<3, 1>(0, 4) = Fq0dv0;
-	f0q0.block<1, 3>(4, 0) = Fv0dq0;
-	f0q0(4, 4) = Fv0dv0;
-	fillBlock(_K, f0q0, index0, index0);
+		MatrixXd Fq0dv0 = Ks * w.norm() / delta_v * d;
+		MatrixXd Fq1dv0 = -Fq0dv0;
+		fillGlobal(_K, Fq0dv0, node_index0, cross_index0 + 1);
+		fillGlobal(_K, Fq1dv0, node_index1, cross_index0 + 1);
 
-	MatrixXd f0q1;
-	f0q1.resize(5, 5);
-	f0q1.setZero();
-	f0q1.block<3, 3>(0, 0) = Fq0dq1;
-	f0q1.block<3, 1>(0, 4) = Fq0dv1;
-	f0q1.block<1, 3>(4, 0) = Fv0dq1;
-	f0q1(4, 4) = Fv0dv1;
-	fillBlock(_K, f0q1, index0, index1);
+		MatrixXd Fv0dq0 = Ks / delta_v * w.transpose();
+		MatrixXd Fv0dq1 = -Fv0dq0;
+		fillGlobal(_K, Fv0dq0, cross_index0 + 1, node_index0);
+		fillGlobal(_K, Fv0dq1, cross_index0 + 1, node_index1);
+	}
 
-	MatrixXd f1q0;
-	f1q0.resize(5, 5);
-	f1q0.setZero();
-	f1q0.block<3, 3>(0, 0) = Fq1dq0;
-	f1q0.block<3, 1>(0, 4) = Fq1dv0;
-	f1q0.block<1, 3>(4, 0) = Fv1dq0;
-	f1q0(4, 4) = Fv1dv0;
-	fillBlock(_K, f1q0, index1, index0);
+	if (!node1->onBorder)
+	{
+		int cross_index1 = nodes_size * 3 + node1->cross_index * 2;
 
-	MatrixXd f1q1;
-	f1q1.resize(5, 5);
-	f1q1.setZero();
-	f1q1.block<3, 3>(0, 0) = Fq1dq1;
-	f1q1.block<3, 1>(0, 4) = Fq1dv1;
-	f1q1.block<1, 3>(4, 0) = Fv1dq1;
-	f1q1(4, 4) = Fv1dv1;
-	fillBlock(_K, f1q1, index1, index1);
+		double Fv1dv1 = -Ks * w.norm()*w.norm() / delta_v;
+		_K.push_back(T(cross_index1 + 1, cross_index1 + 1, Fv1dv1));
+
+		MatrixXd Fq1dv1 = Ks * w.norm() / delta_v * d;
+		MatrixXd Fq0dv1 = -Fq1dv1;
+		fillGlobal(_K, Fq1dv1, node_index1, cross_index1 + 1);
+		fillGlobal(_K, Fq0dv1, node_index0, cross_index1 + 1);
+
+		MatrixXd Fv1dq1 = Ks / delta_v * w.transpose();
+		MatrixXd Fv1dq0 = -Fv1dq1;
+		fillGlobal(_K, Fv1dq1, cross_index1 + 1, node_index1);
+		fillGlobal(_K, Fv1dq0, cross_index1 + 1, node_index0);
+	}
+
+	if (!node0->onBorder && !node1->onBorder)
+	{
+		int cross_index0 = nodes_size * 3 + node0->cross_index * 2;
+		int cross_index1 = nodes_size * 3 + node1->cross_index * 2;
+
+		double Fv1dv0 = Ks * w.norm()*w.norm() / delta_v;;
+		double Fv0dv1 = Fv1dv0;
+
+		_K.push_back(T(cross_index1, cross_index0, Fv1dv0));
+		_K.push_back(T(cross_index0, cross_index1, Fv0dv1));
+	}
 }
 
 void StretchSpring::draw()

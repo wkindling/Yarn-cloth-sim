@@ -1,4 +1,5 @@
 #include "bend.h"
+#include <iostream>
 
 using namespace std;
 using namespace Eigen;
@@ -29,17 +30,17 @@ BendSpring::BendSpring(Node* n0, Node* n1, Node* n2, double _B, double _R, YarnT
 
 BendSpring::~BendSpring() {}
 
-void BendSpring::solve(vector<T>& _K, VectorXd& f)
+void BendSpring::solve(vector<T>& _K, VectorXd& f, int nodes_size)
 {
-	if (springType == Warp) solveU(_K, f);
+	if (springType == Warp) solveU(_K, f, nodes_size);
 
-	else if (springType == Weft) solveV(_K, f);
+	else if (springType == Weft) solveV(_K, f, nodes_size);
 
 	return;
 }
 
 
-void BendSpring::solveU(vector<T>& _K, VectorXd& f)
+void BendSpring::solveU(vector<T>& _K, VectorXd& f, int nodes_size)
 {
 	/*Offset to get crimp and then compute bending force*/
 	Vector3d pos0 = node0->position - R * node0->normal;
@@ -48,6 +49,8 @@ void BendSpring::solveU(vector<T>& _K, VectorXd& f)
 
 	double l1 = (pos1 - pos0).norm();
 	double l2 = (pos2 - pos0).norm();
+	assert(l1 > 0);
+	assert(l2 > 0);
 
 	Vector3d d1 = pos1 - pos0; d1.normalize();
 	Vector3d d2 = pos2 - pos0; d2.normalize();
@@ -62,143 +65,123 @@ void BendSpring::solveU(vector<T>& _K, VectorXd& f)
 	double u1 = node1->u;
 	double u2 = node2->u;
 
+	assert(u1 - u2 > 0);
 	bendEnergy = Kb * (theta*theta) / abs(u1 - u2);
 	
-	int index0 = node0->index * 5;
-	int index1 = node1->index * 5;
-	int index2 = node2->index * 5;
+	int node_index0 = node0->node_index * 3;
+	int node_index1 = node1->node_index * 3;
+	int node_index2 = node2->node_index * 3;
 
 	//Compute and fill the force vector
-	
+	assert(sin(theta) != 0);
 	Vector3d Fq1 = (-2 * Kb*theta) / (l1*(u1 - u2)*sin(theta))*P1*d2;
 	Vector3d Fq2 = (-2 * Kb*theta) / (l2*(u1 - u2)*sin(theta))*P2*d1;
 	Vector3d Fq0 = -(Fq1 + Fq2);
 
-	double Fu1 = Kb * theta*theta / ((u1 - u2)*(u1 - u2));
-	double Fu2 = -Fu1;
-	double Fu0 = 0;
-
-	f.segment<3>(index0) += Fq0;
-	f(index0 + 3) += Fu0;
-	
-	f.segment<3>(index1) += Fq1;
-	f(index1 + 3) += Fu1;
-
-	f.segment<3>(index2) += Fq2;
-	f(index2 + 3) += Fu2;
+	f.segment<3>(node_index0) += Fq0;
+	f.segment<3>(node_index1) += Fq1;
+	f.segment<3>(node_index2) += Fq2;
 
 	node0->compressForce += 0.5*node0->normal.dot(Fq0);
 	node1->compressForce += 0.5*node1->normal.dot(Fq1);
 	node2->compressForce += 0.5*node2->normal.dot(Fq2);
-	
+
+	if (!node1->onBorder)
+	{
+		int cross_index1 = nodes_size * 3 + node1->cross_index * 2;
+		double Fu1 = Kb * theta*theta / ((u1 - u2)*(u1 - u2));
+		f(cross_index1) += Fu1;
+	}
+	if (!node2->onBorder)
+	{
+		int cross_index2 = nodes_size * 3 + node2->cross_index * 2;
+		double Fu2 = -Kb * theta*theta / ((u1 - u2)*(u1 - u2));
+		f(cross_index2) += Fu2;
+	}
+
 	//Compute and fill the stiffness matrix
-	//The local stiffness matrix should be 15*15
-	Matrix3d Fq1dq1 = 2 * Kb / (l1*l1*(u1 - u2)*sin(theta))*(theta*(P1*d2*d1.transpose() + cos(theta) / sin(theta) / sin(theta)*P1*d2*d2.transpose()*P1 + cos(theta)*P1 + d1 * d2.transpose()*P1) - 1 / (sin(theta))*P1*d2*d2.transpose()*P1);
-	Matrix3d Fq1dq2 = -(2 * Kb) / (l2*l1*(u1 - u2)*sin(theta))*(theta*(P1 - cos(theta) / sin(theta) / sin(theta)*P1*d2*d1.transpose()) + 1 / (sin(theta))*P1*d2*d1.transpose())*P2;
-	Matrix3d Fq2dq1 = -(2 * Kb) / (l1*l2*(u1 - u2)*sin(theta))*(theta*(P2 - cos(theta) / sin(theta) / sin(theta)*P2*d1*d2.transpose()) + 1 / (sin(theta))*P2*d1*d2.transpose())*P1;
-	Matrix3d Fq2dq2 = 2 * Kb / (l2*l2*(u1 - u2)*sin(theta))*(theta*(P2*d1*d2.transpose() + cos(theta) / sin(theta) / sin(theta)*P2*d1*d1.transpose()*P2 + cos(theta)*P2 + d2 * d1.transpose()*P2) - 1 / (sin(theta))*P2*d1*d1.transpose()*P2);
+	/* Lagrange Part */
+	MatrixXd Fq1dq1 = 2 * Kb / (l1*l1*(u1 - u2)*sin(theta))*(theta*(P1*d2*d1.transpose() + cos(theta) / sin(theta) / sin(theta)*P1*d2*d2.transpose()*P1 + cos(theta)*P1 + d1 * d2.transpose()*P1) - 1 / (sin(theta))*P1*d2*d2.transpose()*P1);
+	MatrixXd Fq1dq2 = -(2 * Kb) / (l2*l1*(u1 - u2)*sin(theta))*(theta*(P1 - cos(theta) / sin(theta) / sin(theta)*P1*d2*d1.transpose()) + 1 / (sin(theta))*P1*d2*d1.transpose())*P2;
+	MatrixXd Fq2dq1 = -(2 * Kb) / (l1*l2*(u1 - u2)*sin(theta))*(theta*(P2 - cos(theta) / sin(theta) / sin(theta)*P2*d1*d2.transpose()) + 1 / (sin(theta))*P2*d1*d2.transpose())*P1;
+	MatrixXd Fq2dq2 = 2 * Kb / (l2*l2*(u1 - u2)*sin(theta))*(theta*(P2*d1*d2.transpose() + cos(theta) / sin(theta) / sin(theta)*P2*d1*d1.transpose()*P2 + cos(theta)*P2 + d2 * d1.transpose()*P2) - 1 / (sin(theta))*P2*d1*d1.transpose()*P2);
 
-	Matrix3d Fq1dq0 = -(Fq1dq1 + Fq1dq2);
-	Matrix3d Fq2dq0 = -(Fq2dq1 + Fq2dq2);
-	Matrix3d Fq0dq1 = -(Fq1dq1 + Fq2dq1);
-	Matrix3d Fq0dq2 = -(Fq1dq2 + Fq2dq2);
-	Matrix3d Fq0dq0 = -(Fq1dq0 + Fq2dq0);
+	MatrixXd Fq1dq0 = -(Fq1dq1 + Fq1dq2);
+	MatrixXd Fq2dq0 = -(Fq2dq1 + Fq2dq2);
+	MatrixXd Fq0dq1 = -(Fq1dq1 + Fq2dq1);
+	MatrixXd Fq0dq2 = -(Fq1dq2 + Fq2dq2);
+	MatrixXd Fq0dq0 = -(Fq1dq0 + Fq2dq0);
 
-	double Fu1du1 = -2 * Kb*theta*theta / pow((u1 - u2), 3);
-	double Fu2du2 = Fu1du1;
-	double Fu1du2 = -Fu1du1;
-	double Fu2du1 = Fu1du2;
+	fillGlobal(_K, Fq1dq1, node_index1, node_index1);
+	fillGlobal(_K, Fq1dq2, node_index1, node_index2);
+	fillGlobal(_K, Fq2dq1, node_index2, node_index1);
+	fillGlobal(_K, Fq2dq2, node_index2, node_index2);
 
-	Vector3d Fq1du1 = 2 * Kb*theta / (l1*(u1 - u2)*(u1 - u2)*sin(theta))*P1*d2;
-	Vector3d Fq1du2 = -Fq1du1;
-	Vector3d Fq2du1 = 2 * Kb*theta / (l2*(u1 - u2)*(u1 - u2)*sin(theta))*P2*d1;
-	Vector3d Fq2du2 = -Fq2du1;
+	fillGlobal(_K, Fq1dq0, node_index1, node_index0);
+	fillGlobal(_K, Fq2dq0, node_index2, node_index0);
+	fillGlobal(_K, Fq0dq1, node_index0, node_index1);
+	fillGlobal(_K, Fq0dq2, node_index0, node_index2);
+	fillGlobal(_K, Fq0dq0, node_index0, node_index0);
 
-	Vector3d Fq0du1 = -(Fq1du1 + Fq2du1);
-	Vector3d Fq0du2 = -Fq0du1;
+	/* Euler Part */
+	if (!node1->onBorder)
+	{
+		int cross_index1 = nodes_size * 3 + node1->cross_index * 2;
 
-	Vector3d Fu1dq1 = 2 * Kb*theta / (l1*(u1 - u2)*(u1 - u2)*sin(theta))*d2.transpose()*P1;
-	Vector3d Fu2dq1 = -Fu1dq1;
+		double Fu1du1 = -2 * Kb*theta*theta / pow((u1 - u2), 3);
+		_K.push_back(T(cross_index1, cross_index1, Fu1du1));
 
-	Vector3d Fu1dq2 = 2 * Kb*theta / (l2*(u1 - u2)*(u1 - u2)*sin(theta))*d1.transpose()*P2;
-	Vector3d Fu2dq2 = -Fu1dq2;
+		MatrixXd Fq1du1 = 2 * Kb*theta / (l1*(u1 - u2)*(u1 - u2)*sin(theta))*P1*d2;
+		MatrixXd Fq2du1 = 2 * Kb*theta / (l2*(u1 - u2)*(u1 - u2)*sin(theta))*P2*d1;
+		MatrixXd Fq0du1 = -(Fq1du1 + Fq2du1);
+		fillGlobal(_K, Fq1du1, node_index1, cross_index1);
+		fillGlobal(_K, Fq2du1, node_index2, cross_index1);
+		fillGlobal(_K, Fq0du1, node_index0, cross_index1);
+		
+		MatrixXd Fu1dq1 = 2 * Kb*theta / (l1*(u1 - u2)*(u1 - u2)*sin(theta))*d2.transpose()*P1;
+		MatrixXd Fu1dq2 = 2 * Kb*theta / (l2*(u1 - u2)*(u1 - u2)*sin(theta))*d1.transpose()*P2;
+		MatrixXd Fu1dq0 = -(Fu1dq1 + Fu1dq2);
+		fillGlobal(_K, Fu1dq1, cross_index1, node_index1);
+		fillGlobal(_K, Fu1dq2, cross_index1, node_index2);
+		fillGlobal(_K, Fu1dq0, cross_index1, node_index0);
+	}
 
-	Vector3d Fu1dq0 = -(Fu1dq1 + Fu1dq2);
-	Vector3d Fu2dq0 = -Fu1dq0;
-	
-	MatrixXd f0q0;
-	f0q0.resize(5, 5);
-	f0q0.setZero();
-	f0q0.block<3, 3>(0, 0) = Fq0dq0;
-	fillBlock(_K, f0q0, index0, index0);
+	if (!node2->onBorder)
+	{
+		int cross_index2 = nodes_size * 3 + node2->cross_index * 2;
 
-	MatrixXd f0q1;
-	f0q1.resize(5, 5);
-	f0q1.setZero();
-	f0q1.block<3, 3>(0, 0) = Fq0dq1;
-	f0q1.block<3, 1>(0, 3) = Fq0du1;
-	fillBlock(_K, f0q1, index0, index1);
+		double Fu2du2 = -2 * Kb*theta*theta / pow((u1 - u2), 3);
+		_K.push_back(T(cross_index2, cross_index2, Fu2du2));
 
-	MatrixXd f0q2;
-	f0q2.resize(5, 5);
-	f0q2.setZero();
-	f0q2.block<3, 3>(0, 0) = Fq0dq2;
-	f0q2.block<3, 1>(0, 3) = Fq0du2;
-	fillBlock(_K, f0q2, index0, index2);
+		MatrixXd Fq1du2 = -2 * Kb*theta / (l1*(u1 - u2)*(u1 - u2)*sin(theta))*P1*d2;
+		MatrixXd Fq2du2 = -2 * Kb*theta / (l2*(u1 - u2)*(u1 - u2)*sin(theta))*P2*d1;
+		MatrixXd Fq0du2 = -(Fq1du2 + Fq2du2);
+		fillGlobal(_K, Fq1du2, node_index1, cross_index2);
+		fillGlobal(_K, Fq2du2, node_index2, cross_index2);
+		fillGlobal(_K, Fq0du2, node_index0, cross_index2);
+		
+		MatrixXd Fu2dq1 = -2 * Kb*theta / (l1*(u1 - u2)*(u1 - u2)*sin(theta))*d2.transpose()*P1;
+		MatrixXd Fu2dq2 = -2 * Kb*theta / (l2*(u1 - u2)*(u1 - u2)*sin(theta))*d1.transpose()*P2;
+		MatrixXd Fu2dq0 = -(Fu2dq1 + Fu2dq2);
+		fillGlobal(_K, Fu2dq1, cross_index2, node_index1);
+		fillGlobal(_K, Fu2dq2, cross_index2, node_index2);
+		fillGlobal(_K, Fu2dq0, cross_index2, node_index0);
+	}
 
-	MatrixXd f1q0;
-	f1q0.resize(5, 5);
-	f1q0.setZero();
-	f1q0.block<3, 3>(0, 0) = Fq1dq0;
-	f1q0.block<1, 3>(3, 0) = Fu1dq0;
-	fillBlock(_K, f1q0, index1, index0);
+	if (!node1->onBorder && !node2->onBorder)
+	{
+		int cross_index1 = nodes_size * 3 + node1->cross_index * 2;
+		int cross_index2 = nodes_size * 3 + node2->cross_index * 2;
 
-	MatrixXd f1q1;
-	f1q1.resize(5, 5);
-	f1q1.setZero();
-	f1q1.block<3, 3>(0, 0) = Fq1dq1;
-	f1q1.block<3, 1>(0, 3) = Fq1du1;
-	f1q1.block<1, 3>(3, 0) = Fu1dq1;
-	f1q1(3, 3) = Fu1du1;
-	fillBlock(_K, f1q1, index1, index1);
+		double Fu1du2 = 2 * Kb*theta*theta / pow((u1 - u2), 3);
+		double Fu2du1 = Fu1du2;
 
-	MatrixXd f1q2;
-	f1q2.resize(5, 5);
-	f1q2.setZero();
-	f1q2.block<3, 3>(0, 0) = Fq1dq2;
-	f1q2.block<3, 1>(0, 3) = Fq1du2;
-	f1q2.block<1, 3>(3, 0) = Fu1dq2;
-	f1q2(3, 3) = Fu1du2;
-	fillBlock(_K, f1q2, index1, index2);
-
-	MatrixXd f2q0;
-	f2q0.resize(5, 5);
-	f2q0.setZero();
-	f2q0.block<3, 3>(0, 0) = Fq2dq0;
-	f2q0.block<1, 3>(3, 0) = Fu2dq0;
-	fillBlock(_K, f2q0, index2, index0);
-
-	MatrixXd f2q1;
-	f2q1.resize(5, 5);
-	f2q1.setZero();
-	f2q1.block<3, 3>(0, 0) = Fq2dq1;
-	f2q1.block<3, 1>(0, 3) = Fq2du1;
-	f2q1.block<1, 3>(3, 0) = Fu2dq1;
-	f2q1(3, 3) = Fu2du1;
-	fillBlock(_K, f2q1, index2, index1);
-
-	MatrixXd f2q2;
-	f2q2.resize(5, 5);
-	f2q2.setZero();
-	f2q2.block<3, 3>(0, 0) = Fq2dq2;
-	f2q2.block<3, 1>(0, 3) = Fq2du2;
-	f2q2.block<1, 3>(3, 0) = Fu2dq2;
-	f2q2(3, 3) = Fu2du2;
-	fillBlock(_K, f2q2, index2, index2);
-
+		_K.push_back(T(cross_index1, cross_index2, Fu1du2));
+		_K.push_back(T(cross_index2, cross_index1, Fu2du1));
+	}
 }
 
-void BendSpring::solveV(vector<T>& _K, VectorXd& f)
+void BendSpring::solveV(vector<T>& _K, VectorXd& f, int nodes_size)
 {
 	/*Offset to get crimp and then compute bending force*/
 	Vector3d pos0 = node0->position + R * node0->normal;
@@ -223,9 +206,9 @@ void BendSpring::solveV(vector<T>& _K, VectorXd& f)
 
 	bendEnergy = Kb * (theta*theta) / abs(v1 - v2);
 
-	int index0 = node0->index * 5;
-	int index1 = node1->index * 5;
-	int index2 = node2->index * 5;
+	int node_index0 = node0->node_index * 3;
+	int node_index1 = node1->node_index * 3;
+	int node_index2 = node2->node_index * 3;
 
 	//Compute and fill the force vector
 
@@ -233,125 +216,119 @@ void BendSpring::solveV(vector<T>& _K, VectorXd& f)
 	Vector3d Fq2 = (-2 * Kb*theta) / (l2*(v1 - v2)*sin(theta))*P2*d1;
 	Vector3d Fq0 = -(Fq1 + Fq2);
 
-	double Fv1 = Kb * theta*theta / ((v1 - v2)*(v1 - v2));
-	double Fv2 = -Fv1;
-	double Fv0 = 0;
-
-	f.segment<3>(index0) += Fq0;
-	f(index0 + 4) += Fv0;
-
-	f.segment<3>(index1) += Fq1;
-	f(index1 + 4) += Fv1;
-
-	f.segment<3>(index2) += Fq2;
-	f(index2 + 4) += Fv2;
+	f.segment<3>(node_index0) += Fq0;
+	f.segment<3>(node_index1) += Fq1;
+	f.segment<3>(node_index2) += Fq2;
 
 	node0->compressForce -= 0.5*node0->normal.dot(Fq0);
 	node1->compressForce -= 0.5*node1->normal.dot(Fq1);
 	node2->compressForce -= 0.5*node2->normal.dot(Fq2);
 
+	if (!node1->onBorder)
+	{
+		int cross_index1 = nodes_size * 3 + node1->cross_index * 2;
+		double Fv1 = Kb * theta*theta / ((v1 - v2)*(v1 - v2));
+		f(cross_index1 + 1) += Fv1;
+	}
+
+	if (!node2->onBorder)
+	{
+		int cross_index2 = nodes_size * 3 + node2->cross_index * 2;
+		double Fv2 = -Kb * theta*theta / ((v1 - v2)*(v1 - v2));
+		f(cross_index2 + 1) += Fv2;
+	}
+
 	//Compute and fill the stiffness matrix
-	//The local stiffness matrix should be 15*15
-	Matrix3d Fq1dq1 = 2 * Kb / (l1*l1*(v1 - v2)*sin(theta))*(theta*(P1*d2*d1.transpose() + cos(theta) / sin(theta) / sin(theta)*P1*d2*d2.transpose()*P1 + cos(theta)*P1 + d1 * d2.transpose()*P1) - 1 / (sin(theta))*P1*d2*d2.transpose()*P1);
-	Matrix3d Fq1dq2 = -(2 * Kb) / (l2*l1*(v1 - v2)*sin(theta))*(theta*(P1 - cos(theta) / sin(theta) / sin(theta)*P1*d2*d1.transpose()) + 1 / (sin(theta))*P1*d2*d1.transpose())*P2;
-	Matrix3d Fq2dq1 = -(2 * Kb) / (l1*l2*(v1 - v2)*sin(theta))*(theta*(P2 - cos(theta) / sin(theta) / sin(theta)*P2*d1*d2.transpose()) + 1 / (sin(theta))*P2*d1*d2.transpose())*P1;
-	Matrix3d Fq2dq2 = 2 * Kb / (l2*l2*(v1 - v2)*sin(theta))*(theta*(P2*d1*d2.transpose() + cos(theta) / sin(theta) / sin(theta)*P2*d1*d1.transpose()*P2 + cos(theta)*P2 + d2 * d1.transpose()*P2) - 1 / (sin(theta))*P2*d1*d1.transpose()*P2);
+	/* Lagrange Part */
+	MatrixXd Fq1dq1 = 2 * Kb / (l1*l1*(v1 - v2)*sin(theta))*(theta*(P1*d2*d1.transpose() + cos(theta) / sin(theta) / sin(theta)*P1*d2*d2.transpose()*P1 + cos(theta)*P1 + d1 * d2.transpose()*P1) - 1 / (sin(theta))*P1*d2*d2.transpose()*P1);
+	MatrixXd Fq1dq2 = -(2 * Kb) / (l2*l1*(v1 - v2)*sin(theta))*(theta*(P1 - cos(theta) / sin(theta) / sin(theta)*P1*d2*d1.transpose()) + 1 / (sin(theta))*P1*d2*d1.transpose())*P2;
+	MatrixXd Fq2dq1 = -(2 * Kb) / (l1*l2*(v1 - v2)*sin(theta))*(theta*(P2 - cos(theta) / sin(theta) / sin(theta)*P2*d1*d2.transpose()) + 1 / (sin(theta))*P2*d1*d2.transpose())*P1;
+	MatrixXd Fq2dq2 = 2 * Kb / (l2*l2*(v1 - v2)*sin(theta))*(theta*(P2*d1*d2.transpose() + cos(theta) / sin(theta) / sin(theta)*P2*d1*d1.transpose()*P2 + cos(theta)*P2 + d2 * d1.transpose()*P2) - 1 / (sin(theta))*P2*d1*d1.transpose()*P2);
+	/*
+	cout << "fq1dq1 : " << Fq1dq1.determinant() << endl;
+	cout << "fq1dq2 : " << Fq1dq2.determinant() << endl;
+	cout << "fq2dq1 : " << Fq2dq1.determinant() << endl;
+	cout << "fq2dq2 : " << Fq2dq2.determinant() << endl;
+	*/
+	MatrixXd Fq1dq0 = -(Fq1dq1 + Fq1dq2);
+	MatrixXd Fq2dq0 = -(Fq2dq1 + Fq2dq2);
+	MatrixXd Fq0dq1 = -(Fq1dq1 + Fq2dq1);
+	MatrixXd Fq0dq2 = -(Fq1dq2 + Fq2dq2);
+	MatrixXd Fq0dq0 = -(Fq1dq0 + Fq2dq0);
+	/*
+	cout << "fq1dq0 : " << Fq1dq0.determinant() << endl;
+	cout << "fq2dq0 : " << Fq2dq0.determinant() << endl;
+	cout << "fq0dq1 : " << Fq0dq1.determinant() << endl;
+	cout << "fq0dq2 : " << Fq0dq2.determinant() << endl;
+	cout << "fq0dq0 : " << Fq0dq0.determinant() << endl;
+	*/
+	fillGlobal(_K, Fq1dq1, node_index1, node_index1);
+	fillGlobal(_K, Fq1dq2, node_index1, node_index2);
+	fillGlobal(_K, Fq2dq1, node_index2, node_index1);
+	fillGlobal(_K, Fq2dq2, node_index2, node_index2);
 
-	Matrix3d Fq1dq0 = -(Fq1dq1 + Fq1dq2);
-	Matrix3d Fq2dq0 = -(Fq2dq1 + Fq2dq2);
-	Matrix3d Fq0dq1 = -(Fq1dq1 + Fq2dq1);
-	Matrix3d Fq0dq2 = -(Fq1dq2 + Fq2dq2);
-	Matrix3d Fq0dq0 = -(Fq1dq0 + Fq2dq0);
+	fillGlobal(_K, Fq1dq0, node_index1, node_index0);
+	fillGlobal(_K, Fq2dq0, node_index2, node_index0);
+	fillGlobal(_K, Fq0dq1, node_index0, node_index1);
+	fillGlobal(_K, Fq0dq2, node_index0, node_index2);
+	fillGlobal(_K, Fq0dq0, node_index0, node_index0);
 
-	double Fv1dv1 = -2 * Kb*theta*theta / pow((v1 - v2), 3);
-	double Fv2dv2 = Fv1dv1;
-	double Fv1dv2 = -Fv1dv1;
-	double Fv2dv1 = Fv1dv2;
 
-	Vector3d Fq1dv1 = 2 * Kb*theta / (l1*(v1 - v2)*(v1 - v2)*sin(theta))*P1*d2;
-	Vector3d Fq1dv2 = -Fq1dv1;
-	Vector3d Fq2dv1 = 2 * Kb*theta / (l2*(v1 - v2)*(v1 - v2)*sin(theta))*P2*d1;
-	Vector3d Fq2dv2 = -Fq2dv1;
+	/* Euler Part */
+	if (!node1->onBorder)
+	{
+		int cross_index1 = nodes_size * 3 + node1->cross_index * 2;
 
-	Vector3d Fq0dv1 = -(Fq1dv1 + Fq2dv1);
-	Vector3d Fq0dv2 = -Fq0dv1;
+		double Fv1dv1 = -2 * Kb*theta*theta / pow((v1 - v2), 3);
+		_K.push_back(T(cross_index1 + 1, cross_index1 + 1, Fv1dv1));
 
-	Vector3d Fv1dq1 = 2 * Kb*theta / (l1*(v1 - v2)*(v1 - v2)*sin(theta))*d2.transpose()*P1;
-	Vector3d Fv2dq1 = -Fv1dq1;
+		MatrixXd Fq1dv1 = 2 * Kb*theta / (l1*(v1 - v2)*(v1 - v2)*sin(theta))*P1*d2;
+		MatrixXd Fq2dv1 = 2 * Kb*theta / (l2*(v1 - v2)*(v1 - v2)*sin(theta))*P2*d1;
+		MatrixXd Fq0dv1 = -(Fq1dv1 + Fq2dv1);
+		fillGlobal(_K, Fq1dv1, node_index1, cross_index1 + 1);
+		fillGlobal(_K, Fq2dv1, node_index2, cross_index1 + 1);
+		fillGlobal(_K, Fq0dv1, node_index0, cross_index1 + 1);
 
-	Vector3d Fv1dq2 = 2 * Kb*theta / (l2*(v1 - v2)*(v1 - v2)*sin(theta))*d1.transpose()*P2;
-	Vector3d Fv2dq2 = -Fv1dq2;
+		MatrixXd Fv1dq1 = 2 * Kb*theta / (l1*(v1 - v2)*(v1 - v2)*sin(theta))*d2.transpose()*P1;
+		MatrixXd Fv1dq2 = 2 * Kb*theta / (l2*(v1 - v2)*(v1 - v2)*sin(theta))*d1.transpose()*P2;
+		MatrixXd Fv1dq0 = -(Fv1dq1 + Fv1dq2);
+		fillGlobal(_K, Fv1dq1, cross_index1 + 1, node_index1);
+		fillGlobal(_K, Fv1dq2, cross_index1 + 1, node_index2);
+		fillGlobal(_K, Fv1dq0, cross_index1 + 1, node_index0);
+	}
 
-	Vector3d Fv1dq0 = -(Fv1dq1 + Fv1dq2);
-	Vector3d Fv2dq0 = -Fv1dq0;
+	if (!node2->onBorder)
+	{
+		int cross_index2 = nodes_size * 3 + node2->cross_index * 2;
 
-	MatrixXd f0q0;
-	f0q0.resize(5, 5);
-	f0q0.setZero();
-	f0q0.block<3, 3>(0, 0) = Fq0dq0;
-	fillBlock(_K, f0q0, index0, index0);
+		double Fv2dv2 = -2 * Kb*theta*theta / pow((v1 - v2), 3);
+		_K.push_back(T(cross_index2, cross_index2, Fv2dv2));
 
-	MatrixXd f0q1;
-	f0q1.resize(5, 5);
-	f0q1.setZero();
-	f0q1.block<3, 3>(0, 0) = Fq0dq1;
-	f0q1.block<3, 1>(0, 4) = Fq0dv1;
-	fillBlock(_K, f0q1, index0, index1);
+		MatrixXd Fq1dv2 = -2 * Kb*theta / (l1*(v1 - v2)*(v1 - v2)*sin(theta))*P1*d2;
+		MatrixXd Fq2dv2 = -2 * Kb*theta / (l2*(v1 - v2)*(v1 - v2)*sin(theta))*P2*d1;
+		MatrixXd Fq0dv2 = -(Fq1dv2 + Fq2dv2);
+		fillGlobal(_K, Fq1dv2, node_index1, cross_index2 + 1);
+		fillGlobal(_K, Fq2dv2, node_index2, cross_index2 + 1);
+		fillGlobal(_K, Fq0dv2, node_index0, cross_index2 + 1);
 
-	MatrixXd f0q2;
-	f0q2.resize(5, 5);
-	f0q2.setZero();
-	f0q2.block<3, 3>(0, 0) = Fq0dq2;
-	f0q2.block<3, 1>(0, 4) = Fq0dv2;
-	fillBlock(_K, f0q2, index0, index2);
+		MatrixXd Fv2dq1 = -2 * Kb*theta / (l1*(v1 - v2)*(v1 - v2)*sin(theta))*d2.transpose()*P1;
+		MatrixXd Fv2dq2 = -2 * Kb*theta / (l2*(v1 - v2)*(v1 - v2)*sin(theta))*d1.transpose()*P2;
+		MatrixXd Fv2dq0 = -(Fv2dq1 + Fv2dq2);
+		fillGlobal(_K, Fv2dq1, cross_index2 + 1, node_index1);
+		fillGlobal(_K, Fv2dq2, cross_index2 + 1, node_index2);
+		fillGlobal(_K, Fv2dq0, cross_index2 + 1, node_index0);
+	}
 
-	MatrixXd f1q0;
-	f1q0.resize(5, 5);
-	f1q0.setZero();
-	f1q0.block<3, 3>(0, 0) = Fq1dq0;
-	f1q0.block<1, 3>(4, 0) = Fv1dq0;
-	fillBlock(_K, f1q0, index1, index0);
+	if (!node1->onBorder && !node2->onBorder)
+	{
+		int cross_index1 = nodes_size * 3 + node1->cross_index * 2;
+		int cross_index2 = nodes_size * 3 + node2->cross_index * 2;
 
-	MatrixXd f1q1;
-	f1q1.resize(5, 5);
-	f1q1.setZero();
-	f1q1.block<3, 3>(0, 0) = Fq1dq1;
-	f1q1.block<3, 1>(0, 4) = Fq1dv1;
-	f1q1.block<1, 3>(4, 0) = Fv1dq1;
-	f1q1(4, 4) = Fv1dv1;
-	fillBlock(_K, f1q1, index1, index1);
+		double Fv1dv2 = 2 * Kb*theta*theta / pow((v1 - v2), 3);
+		double Fv2dv1 = Fv1dv2;
 
-	MatrixXd f1q2;
-	f1q2.resize(5, 5);
-	f1q2.setZero();
-	f1q2.block<3, 3>(0, 0) = Fq1dq2;
-	f1q2.block<3, 1>(0, 4) = Fq1dv2;
-	f1q2.block<1, 3>(4, 0) = Fv1dq2;
-	f1q2(4, 4) = Fv1dv2;
-	fillBlock(_K, f1q2, index1, index2);
+		_K.push_back(T(cross_index1 + 1, cross_index2 + 1, Fv1dv2));
+		_K.push_back(T(cross_index2 + 1, cross_index1 + 1, Fv2dv1));
+	}
 
-	MatrixXd f2q0;
-	f2q0.resize(5, 5);
-	f2q0.setZero();
-	f2q0.block<3, 3>(0, 0) = Fq2dq0;
-	f2q0.block<1, 3>(4, 0) = Fv2dq0;
-	fillBlock(_K, f2q0, index2, index0);
-
-	MatrixXd f2q1;
-	f2q1.resize(5, 5);
-	f2q1.setZero();
-	f2q1.block<3, 3>(0, 0) = Fq2dq1;
-	f2q1.block<3, 1>(0, 4) = Fq2dv1;
-	f2q1.block<1, 3>(4, 0) = Fv2dq1;
-	f2q1(4, 4) = Fv2dv1;
-	fillBlock(_K, f2q1, index2, index1);
-
-	MatrixXd f2q2;
-	f2q2.resize(5, 5);
-	f2q2.setZero();
-	f2q2.block<3, 3>(0, 0) = Fq2dq2;
-	f2q2.block<3, 1>(0, 4) = Fq2dv2;
-	f2q2.block<1, 3>(4, 0) = Fv2dq2;
-	f2q2(4, 4) = Fv2dv2;
-	fillBlock(_K, f2q2, index2, index2);
 }

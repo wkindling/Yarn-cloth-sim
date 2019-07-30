@@ -31,6 +31,8 @@ public:
 	double R, L, mu, rho;
 	double Y, B, S, Kc, Kf;
 
+	int DoF;
+
 	std::vector<Node*> nodes;
 
 	std::vector<ShearSpring*> shear_springs;

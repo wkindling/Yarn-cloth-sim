@@ -13,3 +13,11 @@ Also, as for the cases when pinned from two corners, it doesn't converge and som
 I think maybe because I have not added boundary condition and just do it through clamping the position and velocity. Also, I think the energy formula mentioned in the paper is kind of strange. I don't know how to calculate the stiffness matrix for the friction. 
 
 It is damn hard!
+
+### 7.30
+I change the implementation of boundary condition. And the behavior of stretch is correct now. 
+But the determinant of sitffness matrix is too large, I cannot get a appropriate simulation parameter.
+
+I will compute the stiffness matrix of friction later. And then add each energy one by one to check the bug. 
+
+It's really complicated because the paper didn't give enough information...

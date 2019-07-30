@@ -32,7 +32,7 @@ public:
 	virtual ~Node();
 
 	Eigen::Vector3d getNormal();
-	void getFriction(double mu, double Kf, std::vector<T>& _K, Eigen::VectorXd& f);
+	void getFriction(double mu, double Kf, std::vector<T>& _K, Eigen::VectorXd& f, int nodes_size);
 
 public:
 	//Normal Node
@@ -51,7 +51,10 @@ public:
 
 	YarnType whichUp;
 
-	int index; // Record global matrix
+	int node_index; // Record global matrix
+	int cross_index;
+
+	bool onBorder;
 
 	EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 };

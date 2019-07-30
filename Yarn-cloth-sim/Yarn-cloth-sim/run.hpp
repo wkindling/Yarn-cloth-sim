@@ -14,17 +14,19 @@ double mouseX = 0, mouseY = 0;
 bool firstMouse = true;
 
 /* ---Parameters--- */
-int cloth_width = 8;
-int cloth_height = 8;
+int cloth_width = 4;
+int cloth_height = 4;
 double R = 0.05;
 double L = 0.5;
-double mu = 8e3;
-double rho = 1;
 double Y = 1e8;
 double B = 1e-1;
 double S = 1e5;
+
+double mu = 8e3;
+double rho = 1;
 double Kc = 1e10;
 double Kf = 8e3;
+
 /*-------------------*/
 
 Camera camera(glm::vec3(12, 11, 5), glm::vec3(0,0,1),-132,-17);
@@ -135,6 +137,8 @@ void mykeyboard(unsigned char key, int x, int y)
 
 void run(int argc, char* argv[])
 {
+	double test = 1e100;
+	cout <<"TEST : "  << test << endl;
 	glutInit(&argc, (char**)argv);
 	init();
 	glutDisplayFunc(display);

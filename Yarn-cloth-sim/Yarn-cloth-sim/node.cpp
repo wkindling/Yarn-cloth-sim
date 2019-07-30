@@ -19,6 +19,7 @@ Node::Node(Vector3d pos, double _u, double _v)
 	compressForce = 0;
 	//whichUp and index assigned externally
 
+	onBorder = false;
 }
 
 Node::~Node() {}
@@ -108,8 +109,10 @@ Vector3d Node::getNormal()
 /* Compute friction force */
 // Ignore damping force yet ... Because damping force may have some influence on global motion equation
 // Currently I ignore the computation of Jacobians for friction because it is too complicated
-void Node::getFriction(double mu, double Kf, vector<T>& _K, VectorXd& f)
+void Node::getFriction(double mu, double Kf, vector<T>& _K, VectorXd& f, int nodes_size)
 {
+	if (this->onBorder) return;
+
 	double friction_u = 0, friction_v = 0;
 	double limit = mu * compressForce;
 
@@ -126,7 +129,7 @@ void Node::getFriction(double mu, double Kf, vector<T>& _K, VectorXd& f)
 		friction_u = -sign(u - anchorU)*mu*compressForce;
 	}
 
-	f(index * 5 + 3) += friction_u;
+	f(nodes_size * 3 + cross_index * 2) += friction_u;
 
 	/* Get friction in weft direction */
 	double hat_fv = -Kf * (v - anchorV);
@@ -140,5 +143,5 @@ void Node::getFriction(double mu, double Kf, vector<T>& _K, VectorXd& f)
 		friction_v = -sign(v - anchorV)*mu*compressForce;
 	}
 
-	f(index * 5 + 4) += friction_v;
+	f(nodes_size * 3 + cross_index * 2 + 1) += friction_v;
 }
