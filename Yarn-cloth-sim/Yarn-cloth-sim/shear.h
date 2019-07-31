@@ -22,7 +22,7 @@ public:
 	double shearEnergy;
 	double S, R, L, Kx;
 
-
+	EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 
 };
 

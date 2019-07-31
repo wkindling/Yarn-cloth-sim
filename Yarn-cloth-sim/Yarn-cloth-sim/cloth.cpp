@@ -45,7 +45,7 @@ void Cloth::build()
 	{
 		for (int i = 0; i < width; i++) // v for weft (y)
 		{
-			Node* node = new Node(Vector3d(0, i*L, -j*L), i*L, -j*L);
+			Node* node = new Node(Vector3d(i*L, j*L, 0), i*L, j*L);
 
 			if ((i + j) % 2 == 0)
 			{
@@ -419,6 +419,7 @@ void Cloth::computeForce(Vector3d gravity, double h)
 		bend_springs[i]->solve(_K, f, nodes.size(), h);
 	}
 
+	/* Get Friction force */
 	for (int i = 0; i < nodes.size(); i++)
 	{
 		if (nodes[i]->compressForce < 0) nodes[i]->compressForce = 0;
@@ -426,7 +427,7 @@ void Cloth::computeForce(Vector3d gravity, double h)
 
 	for (int i = 0; i < nodes.size(); i++)
 	{
-		//nodes[i]->getFriction(mu, Kf, _K, f, nodes.size(), h);
+		nodes[i]->getFriction(mu, Kf, _K, f, nodes.size(), h);
 	}
 
 	/* Gravity Force */
@@ -546,7 +547,7 @@ void Cloth::draw()
 		glPointSize(5.0f);
 		glColor3d(0.8, 0, 0);
 		glBegin(GL_POINTS);
-		glVertex3d(nodes[i]->position.x(),nodes[i]->position.y(),nodes[i]->position.z());
+		glVertex3d(nodes[i]->position.x()*1e3,nodes[i]->position.y()*1e3,nodes[i]->position.z()*1e3);
 		glEnd();
 	}
 }
@@ -558,14 +559,14 @@ void Cloth::step(double h)
 		nodes[i]->getNormal();
 	}
 
-	computeForce(Vector3d(0, 0, -9.8), h);
+	computeForce(Vector3d(0, 0, -0.98), h);
 	
 	solve(h);
 
 	/* Update */
 	for (int i = 0; i < nodes.size(); i++)
 	{
-		if (i<width)
+		if (i<=width-1)
 		{
 			v.segment<3>(nodes[i]->node_index * 3) = Vector3d::Zero();			
 			continue;

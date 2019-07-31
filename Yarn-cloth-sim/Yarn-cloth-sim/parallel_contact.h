@@ -27,6 +27,8 @@ public:
 	double parallelContactEnergy;
 
 	YarnType springType;
+
+	EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 };
 
 #endif

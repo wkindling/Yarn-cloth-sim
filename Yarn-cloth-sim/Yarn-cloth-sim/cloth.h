@@ -46,7 +46,7 @@ public:
 	Eigen::SparseMatrix<double> M;
 	Eigen::SparseMatrix<double> K;
 
-
+	EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 };
 
 

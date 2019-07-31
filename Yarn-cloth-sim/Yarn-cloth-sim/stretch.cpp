@@ -35,7 +35,6 @@ void StretchSpring::solve(vector<T>& _K, VectorXd& f, int nodes_size, double h)
 	
 	else if (springType == Warp) solveU(_K, f, nodes_size, h);
 
-	//cout << (node1->position - node0->position).norm() << endl;
 	return;
 }
 
@@ -54,6 +53,9 @@ void StretchSpring::solveU(vector<T>& _K, VectorXd& f, int nodes_size, double h)
 	int node_index0 = node0->node_index * 3;
 	int node_index1 = node1->node_index * 3;
 
+	int cross_index0 = nodes_size * 3 + node0->cross_index * 2;
+	int cross_index1 = nodes_size * 3 + node1->cross_index * 2;
+
 	/* Compute and fill the force vector */
 	Vector3d Fq1 = -Ks * (w.norm() - 1)*d;
 	Vector3d Fq0 = -Fq1;
@@ -67,14 +69,12 @@ void StretchSpring::solveU(vector<T>& _K, VectorXd& f, int nodes_size, double h)
 	if (!node0->onBorder)
 	{
 		double Fu0 = -0.5*Ks*(w.norm()*w.norm() - 1);
-		int cross_index0 = nodes_size * 3 + node0->cross_index * 2;
 		f(cross_index0) += Fu0;
 	}
 
 	if (!node1->onBorder)
 	{
 		double Fu1 = 0.5*Ks*(w.norm()*w.norm() - 1);
-		int cross_index1 = nodes_size * 3 + node1->cross_index * 2;
 		f(cross_index1) += Fu1;
 	}
 
@@ -86,15 +86,31 @@ void StretchSpring::solveU(vector<T>& _K, VectorXd& f, int nodes_size, double h)
 	MatrixXd Fq0dq1 = Fq1dq0;
 
 	fillGlobalStiffness(_K, Fq1dq1, node_index1, node_index1, h);
-	fillGlobalStiffness(_K, Fq0dq0, node_index0, node_index0, h);
 	fillGlobalStiffness(_K, Fq1dq0, node_index1, node_index0, h);
+	fillGlobalStiffness(_K, Fq0dq0, node_index0, node_index0, h);
 	fillGlobalStiffness(_K, Fq0dq1, node_index0, node_index1, h);
+
+	if (!node0->onBorder)
+	{
+		MatrixXd fri_u0dq0 = 0.5*node0->normal.transpose()*Fq0dq0;
+		MatrixXd fri_u0dq1 = 0.5*node0->normal.transpose()*Fq0dq1;
+		
+		fillGlobalStiffness(node0->u_friction, fri_u0dq0, cross_index0, node_index0, h);
+		fillGlobalStiffness(node0->u_friction, fri_u0dq1, cross_index0, node_index1, h);
+	}
+
+	if (!node1->onBorder)
+	{
+		MatrixXd fri_u1dq0 = 0.5*node1->normal.transpose() * Fq1dq0;
+		MatrixXd fri_u1dq1 = 0.5*node1->normal.transpose() *Fq1dq1;
+
+		fillGlobalStiffness(node1->u_friction, fri_u1dq0, cross_index1, node_index0, h);
+		fillGlobalStiffness(node1->u_friction, fri_u1dq1, cross_index1, node_index1, h);
+	}
 
 	/* Euler Part */
 	if (!node0->onBorder)
 	{
-		int cross_index0 = nodes_size * 3 + node0->cross_index * 2;
-
 		double Fu0du0 = -Ks * w.norm()*w.norm() / delta_u;
 		_K.push_back(T(cross_index0, cross_index0, -h*h*Fu0du0));
 		
@@ -103,6 +119,18 @@ void StretchSpring::solveU(vector<T>& _K, VectorXd& f, int nodes_size, double h)
 		fillGlobalStiffness(_K, Fq0du0, node_index0, cross_index0, h);
 		fillGlobalStiffness(_K, Fq1du0, node_index1, cross_index0, h);
 
+		if (!node0->onBorder)
+		{
+			MatrixXd fri_u0du0 = 0.5*node0->normal.transpose()*Fq0du0;
+			fillGlobalStiffness(node0->u_friction, fri_u0du0, cross_index0, cross_index0, h);
+		}
+
+		if (!node1->onBorder)
+		{
+			MatrixXd fri_u1du0 = 0.5*node1->normal.transpose()*Fq1du0;
+			fillGlobalStiffness(node1->u_friction, fri_u1du0, cross_index1, cross_index0, h);
+		}
+
 		MatrixXd Fu0dq0 = Ks / delta_u * w.transpose();
 		MatrixXd Fu0dq1 = -Fu0dq0;
 		fillGlobalStiffness(_K, Fu0dq0, cross_index0, node_index0, h);
@@ -110,9 +138,7 @@ void StretchSpring::solveU(vector<T>& _K, VectorXd& f, int nodes_size, double h)
 	}
 
 	if (!node1->onBorder)
-	{
-		int cross_index1 = nodes_size * 3 + node1->cross_index * 2;
-		
+	{		
 		double Fu1du1 = -Ks * w.norm()*w.norm() / delta_u;
 		_K.push_back(T(cross_index1, cross_index1, -h * h*Fu1du1));
 		
@@ -120,6 +146,18 @@ void StretchSpring::solveU(vector<T>& _K, VectorXd& f, int nodes_size, double h)
 		MatrixXd Fq0du1 = -Fq1du1;
 		fillGlobalStiffness(_K, Fq1du1, node_index1, cross_index1, h);
 		fillGlobalStiffness(_K, Fq0du1, node_index0, cross_index1, h);
+
+		if (!node0->onBorder)
+		{
+			MatrixXd fri_u0du1 = 0.5*node0->normal.transpose()*Fq0du1;
+			fillGlobalStiffness(node0->u_friction, fri_u0du1, cross_index0, cross_index1, h);
+		}
+
+		if (!node1->onBorder)
+		{
+			MatrixXd fri_u1du1 = 0.5*node1->normal.transpose()*Fq1du1;
+			fillGlobalStiffness(node1->u_friction, fri_u1du1, cross_index1, cross_index1, h);
+		}
 
 		MatrixXd Fu1dq1 = Ks / delta_u * w.transpose();
 		MatrixXd Fu1dq0 = -Fu1dq1;
@@ -129,9 +167,6 @@ void StretchSpring::solveU(vector<T>& _K, VectorXd& f, int nodes_size, double h)
 
 	if (!node0->onBorder && !node1->onBorder)
 	{
-		int cross_index0 = nodes_size * 3 + node0->cross_index * 2;
-		int cross_index1 = nodes_size * 3 + node1->cross_index * 2;
-
 		double Fu1du0 = Ks * w.norm()*w.norm() / delta_u;
 		double Fu0du1 = Fu1du0;
 
@@ -156,6 +191,9 @@ void StretchSpring::solveV(vector<T>& _K, VectorXd& f, int nodes_size, double h)
 	int node_index0 = node0->node_index * 3;
 	int node_index1 = node1->node_index * 3;
 
+	int cross_index0 = nodes_size * 3 + node0->cross_index * 2;
+	int cross_index1 = nodes_size * 3 + node1->cross_index * 2;
+
 	//Compute and fill the force vector
 	Vector3d Fq1 = -Ks * (w.norm() - 1)*d;
 	Vector3d Fq0 = -Fq1;
@@ -169,14 +207,12 @@ void StretchSpring::solveV(vector<T>& _K, VectorXd& f, int nodes_size, double h)
 	if (!node0->onBorder)
 	{
 		double Fv0 = -0.5*Ks*(w.norm()*w.norm() - 1);
-		int cross_index0 = nodes_size * 3 + node0->cross_index * 2;
 		f(cross_index0 + 1) += Fv0;
 	}
 
 	if (!node1->onBorder)
 	{
 		double Fv1 = 0.5*Ks*(w.norm()*w.norm() - 1);
-		int cross_index1 = nodes_size * 3 + node1->cross_index * 2;
 		f(cross_index1 + 1) += Fv1;
 	}
 
@@ -188,15 +224,31 @@ void StretchSpring::solveV(vector<T>& _K, VectorXd& f, int nodes_size, double h)
 	MatrixXd Fq0dq1 = Fq1dq0;
 
 	fillGlobalStiffness(_K, Fq1dq1, node_index1, node_index1, h);
-	fillGlobalStiffness(_K, Fq0dq0, node_index0, node_index0, h);
 	fillGlobalStiffness(_K, Fq1dq0, node_index1, node_index0, h);
+	fillGlobalStiffness(_K, Fq0dq0, node_index0, node_index0, h);
 	fillGlobalStiffness(_K, Fq0dq1, node_index0, node_index1, h);
+
+	if (!node0->onBorder)
+	{
+		MatrixXd fri_v0dq0 = -0.5*node0->normal.transpose()*Fq0dq0;
+		MatrixXd fri_v0dq1 = -0.5*node0->normal.transpose()*Fq0dq1;
+
+		fillGlobalStiffness(node0->v_friction, fri_v0dq0, cross_index0 + 1, node_index0, h);
+		fillGlobalStiffness(node0->v_friction, fri_v0dq1, cross_index0 + 1, node_index1, h);
+	}
+
+	if (!node1->onBorder)
+	{
+		MatrixXd fri_v1dq0 = -0.5*node1->normal.transpose()*Fq1dq0;
+		MatrixXd fri_v1dq1 = -0.5*node1->normal.transpose()*Fq1dq1;
+
+		fillGlobalStiffness(node1->v_friction, fri_v1dq0, cross_index1 + 1, node_index0, h);
+		fillGlobalStiffness(node1->v_friction, fri_v1dq1, cross_index1 + 1, node_index1, h);
+	}
 
 	/* Euler Part */
 	if (!node0->onBorder)
 	{
-		int cross_index0 = nodes_size * 3 + node0->cross_index * 2;
-
 		double Fv0dv0 = -Ks * w.norm()*w.norm() / delta_v;
 		_K.push_back(T(cross_index0 + 1, cross_index0 + 1, -h * h*Fv0dv0));
 
@@ -204,6 +256,18 @@ void StretchSpring::solveV(vector<T>& _K, VectorXd& f, int nodes_size, double h)
 		MatrixXd Fq1dv0 = -Fq0dv0;
 		fillGlobalStiffness(_K, Fq0dv0, node_index0, cross_index0 + 1, h);
 		fillGlobalStiffness(_K, Fq1dv0, node_index1, cross_index0 + 1, h);
+
+		if (!node0->onBorder)
+		{
+			MatrixXd fri_v0dv0 = -0.5*node0->normal.transpose()*Fq0dv0;
+			fillGlobalStiffness(node0->v_friction, fri_v0dv0, cross_index0 + 1, cross_index0 + 1, h);
+		}
+
+		if (!node1->onBorder)
+		{
+			MatrixXd fri_v1dv0 = -0.5*node1->normal.transpose()*Fq1dv0;
+			fillGlobalStiffness(node1->v_friction, fri_v1dv0, cross_index1 + 1, cross_index0 + 1, h);
+		}
 
 		MatrixXd Fv0dq0 = Ks / delta_v * w.transpose();
 		MatrixXd Fv0dq1 = -Fv0dq0;
@@ -213,8 +277,6 @@ void StretchSpring::solveV(vector<T>& _K, VectorXd& f, int nodes_size, double h)
 
 	if (!node1->onBorder)
 	{
-		int cross_index1 = nodes_size * 3 + node1->cross_index * 2;
-
 		double Fv1dv1 = -Ks * w.norm()*w.norm() / delta_v;
 		_K.push_back(T(cross_index1 + 1, cross_index1 + 1, -h * h*Fv1dv1));
 
@@ -222,6 +284,18 @@ void StretchSpring::solveV(vector<T>& _K, VectorXd& f, int nodes_size, double h)
 		MatrixXd Fq0dv1 = -Fq1dv1;
 		fillGlobalStiffness(_K, Fq1dv1, node_index1, cross_index1 + 1, h);
 		fillGlobalStiffness(_K, Fq0dv1, node_index0, cross_index1 + 1, h);
+
+		if (!node0->onBorder)
+		{
+			MatrixXd fri_v0dv1 = -0.5*node0->normal.transpose()*Fq0dv1;
+			fillGlobalStiffness(node0->v_friction, fri_v0dv1, cross_index0 + 1, cross_index1 + 1, h);
+		}
+
+		if (!node1->onBorder)
+		{
+			MatrixXd fri_v1dv1 = -0.5*node1->normal.transpose()*Fq1dv1;
+			fillGlobalStiffness(node1->v_friction, fri_v1dv1, cross_index1 + 1, cross_index1 + 1, h);
+		}
 
 		MatrixXd Fv1dq1 = Ks / delta_v * w.transpose();
 		MatrixXd Fv1dq0 = -Fv1dq1;
@@ -231,9 +305,6 @@ void StretchSpring::solveV(vector<T>& _K, VectorXd& f, int nodes_size, double h)
 
 	if (!node0->onBorder && !node1->onBorder)
 	{
-		int cross_index0 = nodes_size * 3 + node0->cross_index * 2;
-		int cross_index1 = nodes_size * 3 + node1->cross_index * 2;
-
 		double Fv1dv0 = Ks * w.norm()*w.norm() / delta_v;;
 		double Fv0dv1 = Fv1dv0;
 
@@ -252,7 +323,7 @@ void StretchSpring::draw()
 		Vector3d pos0, pos1;
 		if (node0->neighbor[NodeLocation::Up] && node0->neighbor[NodeLocation::Down] && node0->neighbor[NodeLocation::Right] && node0->neighbor[NodeLocation::Left])
 		{
-			pos0 = node0->position + node0->normal*R;
+			pos0 = node0->position + node0->normal*R/2.0;
 		}
 		else
 		{
@@ -261,7 +332,7 @@ void StretchSpring::draw()
 
 		if (node1->neighbor[NodeLocation::Up] && node1->neighbor[NodeLocation::Down] && node1->neighbor[NodeLocation::Right] && node1->neighbor[NodeLocation::Left])
 		{
-			pos1 = node1->position + node1->normal*R;
+			pos1 = node1->position + node1->normal*R/2.0;
 		}
 		else
 		{
@@ -279,7 +350,7 @@ void StretchSpring::draw()
 		Vector3d pos0, pos1;
 		if (node0->neighbor[NodeLocation::Up] && node0->neighbor[NodeLocation::Down] && node0->neighbor[NodeLocation::Right] && node0->neighbor[NodeLocation::Left])
 		{
-			pos0 = node0->position - node0->normal*R;
+			pos0 = node0->position - node0->normal*R/2.0;
 		}
 		else
 		{
@@ -288,7 +359,7 @@ void StretchSpring::draw()
 
 		if (node1->neighbor[NodeLocation::Up] && node1->neighbor[NodeLocation::Down] && node1->neighbor[NodeLocation::Right] && node1->neighbor[NodeLocation::Left])
 		{
-			pos1 = node1->position - node1->normal*R;
+			pos1 = node1->position - node1->normal*R/2.0;
 		}
 		else
 		{

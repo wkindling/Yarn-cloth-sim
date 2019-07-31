@@ -116,32 +116,49 @@ void Node::getFriction(double mu, double Kf, vector<T>& _K, VectorXd& f, int nod
 	double friction_u = 0, friction_v = 0;
 	double limit = mu * compressForce;
 
-	//Maybe I need to fill the stiffness matrix again due to friction
 	/* Get friction in warp direction */
 	double hat_fu = -Kf * (u - anchorU);
 	
-	if (hat_fu <= limit)
+	if (hat_fu <= limit)  // Stick
 	{
 		friction_u = hat_fu;
+		f(nodes_size * 3 + cross_index * 2) += friction_u;
+
+		_K.push_back(T(nodes_size * 3 + cross_index * 2, nodes_size * 3 + cross_index * 2, (-h * h)*(-Kf)));		
 	}
-	else
+	else //Slip
 	{
 		friction_u = -sign(u - anchorU)*mu*compressForce;
-	}
+		f(nodes_size * 3 + cross_index * 2) += friction_u;
 
-	f(nodes_size * 3 + cross_index * 2) += friction_u;
+		for (int i = 0; i < u_friction.size(); i++)
+		{
+			_K.push_back(u_friction[i]);
+		}
+	}
 
 	/* Get friction in weft direction */
 	double hat_fv = -Kf * (v - anchorV);
 	
-	if (hat_fv <= limit)
+	if (hat_fv <= limit) // Stick
 	{
 		friction_v = hat_fv;
+		f(nodes_size * 3 + cross_index * 2 + 1) += friction_v;
+
+		_K.push_back(T(nodes_size * 3 + cross_index * 2 + 1, nodes_size * 3 + cross_index * 2 + 1, (-h * h)*(-Kf)));
+
 	}
-	else
+	else //Slip
 	{
 		friction_v = -sign(v - anchorV)*mu*compressForce;
+		f(nodes_size * 3 + cross_index * 2 + 1) += friction_v;
+
+		for (int i = 0; i < v_friction.size(); i++)
+		{
+			_K.push_back(v_friction[i]);
+		}
 	}
 
-	f(nodes_size * 3 + cross_index * 2 + 1) += friction_v;
+	u_friction.clear();
+	v_friction.clear();
 }

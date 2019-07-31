@@ -69,6 +69,10 @@ void BendSpring::solveU(vector<T>& _K, VectorXd& f, int nodes_size, double h)
 	int node_index1 = node1->node_index * 3;
 	int node_index2 = node2->node_index * 3;
 
+	int cross_index0 = nodes_size * 3 + node0->cross_index * 2;
+	int cross_index1 = nodes_size * 3 + node1->cross_index * 2;
+	int cross_index2 = nodes_size * 3 + node2->cross_index * 2;
+
 	//Compute and fill the force vector
 	Vector3d Fq1 = (-2 * Kb*theta) / (l1*(u1 - u2)*sin(theta))*P1*d2;
 	Vector3d Fq2 = (-2 * Kb*theta) / (l2*(u1 - u2)*sin(theta))*P2*d1;
@@ -84,13 +88,11 @@ void BendSpring::solveU(vector<T>& _K, VectorXd& f, int nodes_size, double h)
 
 	if (!node1->onBorder)
 	{
-		int cross_index1 = nodes_size * 3 + node1->cross_index * 2;
 		double Fu1 = Kb * theta*theta / ((u1 - u2)*(u1 - u2));
 		f(cross_index1) += Fu1;
 	}
 	if (!node2->onBorder)
 	{
-		int cross_index2 = nodes_size * 3 + node2->cross_index * 2;
 		double Fu2 = -Kb * theta*theta / ((u1 - u2)*(u1 - u2));
 		f(cross_index2) += Fu2;
 	}
@@ -110,20 +112,50 @@ void BendSpring::solveU(vector<T>& _K, VectorXd& f, int nodes_size, double h)
 
 	fillGlobalStiffness(_K, Fq1dq1, node_index1, node_index1, h);
 	fillGlobalStiffness(_K, Fq1dq2, node_index1, node_index2, h);
+	fillGlobalStiffness(_K, Fq1dq0, node_index1, node_index0, h);
 	fillGlobalStiffness(_K, Fq2dq1, node_index2, node_index1, h);
 	fillGlobalStiffness(_K, Fq2dq2, node_index2, node_index2, h);
-
-	fillGlobalStiffness(_K, Fq1dq0, node_index1, node_index0, h);
-	fillGlobalStiffness(_K, Fq2dq0, node_index2, node_index0, h);
+	fillGlobalStiffness(_K, Fq2dq0, node_index2, node_index0, h);	
 	fillGlobalStiffness(_K, Fq0dq1, node_index0, node_index1, h);
 	fillGlobalStiffness(_K, Fq0dq2, node_index0, node_index2, h);
 	fillGlobalStiffness(_K, Fq0dq0, node_index0, node_index0, h);
 
+	if (!node0->onBorder)
+	{
+		MatrixXd fri_u0dq0 = 0.5*node0->normal.transpose()*Fq0dq0;
+		MatrixXd fri_u0dq1 = 0.5*node0->normal.transpose()*Fq0dq1;
+		MatrixXd fri_u0dq2 = 0.5*node0->normal.transpose()*Fq0dq2;
+
+		fillGlobalStiffness(node0->u_friction, fri_u0dq0, cross_index0, node_index0, h);
+		fillGlobalStiffness(node0->u_friction, fri_u0dq1, cross_index0, node_index1, h);
+		fillGlobalStiffness(node0->u_friction, fri_u0dq2, cross_index0, node_index2, h);
+	}
+
+	if (!node1->onBorder)
+	{
+		MatrixXd fri_u1dq0 = 0.5*node1->normal.transpose()*Fq1dq0;
+		MatrixXd fri_u1dq1 = 0.5*node1->normal.transpose()*Fq1dq1;
+		MatrixXd fri_u1dq2 = 0.5*node1->normal.transpose()*Fq1dq2;
+
+		fillGlobalStiffness(node1->u_friction, fri_u1dq0, cross_index1, node_index0, h);
+		fillGlobalStiffness(node1->u_friction, fri_u1dq1, cross_index1, node_index1, h);
+		fillGlobalStiffness(node1->u_friction, fri_u1dq2, cross_index1, node_index2, h);
+	}
+
+	if (!node2->onBorder)
+	{
+		MatrixXd fri_u2dq0 = 0.5*node2->normal.transpose()*Fq2dq0;
+		MatrixXd fri_u2dq1 = 0.5*node2->normal.transpose()*Fq2dq1;
+		MatrixXd fri_u2dq2 = 0.5*node2->normal.transpose()*Fq2dq2;
+
+		fillGlobalStiffness(node2->u_friction, fri_u2dq0, cross_index2, node_index0, h);
+		fillGlobalStiffness(node2->u_friction, fri_u2dq1, cross_index2, node_index1, h);
+		fillGlobalStiffness(node2->u_friction, fri_u2dq2, cross_index2, node_index2, h);
+	}
+
 	/* Euler Part */
 	if (!node1->onBorder)
 	{
-		int cross_index1 = nodes_size * 3 + node1->cross_index * 2;
-
 		double Fu1du1 = -2 * Kb*theta*theta / pow((u1 - u2), 3);
 		_K.push_back(T(cross_index1, cross_index1, -h * h*Fu1du1));
 
@@ -133,7 +165,25 @@ void BendSpring::solveU(vector<T>& _K, VectorXd& f, int nodes_size, double h)
 		fillGlobalStiffness(_K, Fq1du1, node_index1, cross_index1, h);
 		fillGlobalStiffness(_K, Fq2du1, node_index2, cross_index1, h);
 		fillGlobalStiffness(_K, Fq0du1, node_index0, cross_index1, h);
-		
+
+		if (!node0->onBorder)
+		{
+			MatrixXd fri_u0du1 = 0.5*node0->normal.transpose()*Fq0du1;
+			fillGlobalStiffness(node0->u_friction, fri_u0du1, cross_index0, cross_index1, h);
+		}
+
+		if (!node1->onBorder)
+		{
+			MatrixXd fri_u1du1 = 0.5*node1->normal.transpose()*Fq1du1;
+			fillGlobalStiffness(node1->u_friction, fri_u1du1, cross_index1, cross_index1, h);
+		}
+
+		if (!node2->onBorder)
+		{
+			MatrixXd fri_u2du1 = 0.5*node2->normal.transpose()*Fq2du1;
+			fillGlobalStiffness(node2->u_friction, fri_u2du1, cross_index2, cross_index1, h);
+		}
+
 		MatrixXd Fu1dq1 = 2 * Kb*theta / (l1*(u1 - u2)*(u1 - u2)*sin(theta))*d2.transpose()*P1;
 		MatrixXd Fu1dq2 = 2 * Kb*theta / (l2*(u1 - u2)*(u1 - u2)*sin(theta))*d1.transpose()*P2;
 		MatrixXd Fu1dq0 = -(Fu1dq1 + Fu1dq2);
@@ -144,8 +194,6 @@ void BendSpring::solveU(vector<T>& _K, VectorXd& f, int nodes_size, double h)
 
 	if (!node2->onBorder)
 	{
-		int cross_index2 = nodes_size * 3 + node2->cross_index * 2;
-
 		double Fu2du2 = -2 * Kb*theta*theta / pow((u1 - u2), 3);
 		_K.push_back(T(cross_index2, cross_index2, -h*h*Fu2du2));
 
@@ -156,6 +204,24 @@ void BendSpring::solveU(vector<T>& _K, VectorXd& f, int nodes_size, double h)
 		fillGlobalStiffness(_K, Fq2du2, node_index2, cross_index2, h);
 		fillGlobalStiffness(_K, Fq0du2, node_index0, cross_index2, h);
 		
+		if (!node0->onBorder)
+		{
+			MatrixXd fri_u0du2 = 0.5*node0->normal.transpose()*Fq0du2;
+			fillGlobalStiffness(node0->u_friction, fri_u0du2, cross_index0, cross_index2, h);
+		}
+
+		if (!node1->onBorder)
+		{
+			MatrixXd fri_u1du2 = 0.5*node1->normal.transpose()*Fq1du2;
+			fillGlobalStiffness(node1->u_friction, fri_u1du2, cross_index1, cross_index2, h);
+		}
+
+		if (!node2->onBorder)
+		{
+			MatrixXd fri_u2du2 = 0.5*node2->normal.transpose()*Fq2du2;
+			fillGlobalStiffness(node2->u_friction, fri_u2du2, cross_index2, cross_index2, h);
+		}
+
 		MatrixXd Fu2dq1 = -2 * Kb*theta / (l1*(u1 - u2)*(u1 - u2)*sin(theta))*d2.transpose()*P1;
 		MatrixXd Fu2dq2 = -2 * Kb*theta / (l2*(u1 - u2)*(u1 - u2)*sin(theta))*d1.transpose()*P2;
 		MatrixXd Fu2dq0 = -(Fu2dq1 + Fu2dq2);
@@ -166,9 +232,6 @@ void BendSpring::solveU(vector<T>& _K, VectorXd& f, int nodes_size, double h)
 
 	if (!node1->onBorder && !node2->onBorder)
 	{
-		int cross_index1 = nodes_size * 3 + node1->cross_index * 2;
-		int cross_index2 = nodes_size * 3 + node2->cross_index * 2;
-
 		double Fu1du2 = 2 * Kb*theta*theta / pow((u1 - u2), 3);
 		double Fu2du1 = Fu1du2;
 
@@ -206,6 +269,10 @@ void BendSpring::solveV(vector<T>& _K, VectorXd& f, int nodes_size, double h)
 	int node_index1 = node1->node_index * 3;
 	int node_index2 = node2->node_index * 3;
 
+	int cross_index0 = nodes_size * 3 + node0->cross_index * 2;
+	int cross_index1 = nodes_size * 3 + node1->cross_index * 2;
+	int cross_index2 = nodes_size * 3 + node2->cross_index * 2;
+
 	//Compute and fill the force vector
 
 	Vector3d Fq1 = (-2 * Kb*theta) / (l1*(v1 - v2)*sin(theta))*P1*d2;
@@ -222,14 +289,12 @@ void BendSpring::solveV(vector<T>& _K, VectorXd& f, int nodes_size, double h)
 
 	if (!node1->onBorder)
 	{
-		int cross_index1 = nodes_size * 3 + node1->cross_index * 2;
 		double Fv1 = Kb * theta*theta / ((v1 - v2)*(v1 - v2));
 		f(cross_index1 + 1) += Fv1;
 	}
 
 	if (!node2->onBorder)
 	{
-		int cross_index2 = nodes_size * 3 + node2->cross_index * 2;
 		double Fv2 = -Kb * theta*theta / ((v1 - v2)*(v1 - v2));
 		f(cross_index2 + 1) += Fv2;
 	}
@@ -249,21 +314,50 @@ void BendSpring::solveV(vector<T>& _K, VectorXd& f, int nodes_size, double h)
 
 	fillGlobalStiffness(_K, Fq1dq1, node_index1, node_index1, h);
 	fillGlobalStiffness(_K, Fq1dq2, node_index1, node_index2, h);
+	fillGlobalStiffness(_K, Fq1dq0, node_index1, node_index0, h);
 	fillGlobalStiffness(_K, Fq2dq1, node_index2, node_index1, h);
 	fillGlobalStiffness(_K, Fq2dq2, node_index2, node_index2, h);
-
-	fillGlobalStiffness(_K, Fq1dq0, node_index1, node_index0, h);
 	fillGlobalStiffness(_K, Fq2dq0, node_index2, node_index0, h);
 	fillGlobalStiffness(_K, Fq0dq1, node_index0, node_index1, h);
 	fillGlobalStiffness(_K, Fq0dq2, node_index0, node_index2, h);
 	fillGlobalStiffness(_K, Fq0dq0, node_index0, node_index0, h);
 
+	if (!node0->onBorder)
+	{
+		MatrixXd fri_v0dq0 = -0.5*node0->normal.transpose()*Fq0dq0;
+		MatrixXd fri_v0dq1 = -0.5*node0->normal.transpose()*Fq0dq1;
+		MatrixXd fri_v0dq2 = -0.5*node0->normal.transpose()*Fq0dq2;
+		
+		fillGlobalStiffness(node0->v_friction, fri_v0dq0, cross_index0 + 1, node_index0, h);
+		fillGlobalStiffness(node0->v_friction, fri_v0dq1, cross_index0 + 1, node_index1, h);
+		fillGlobalStiffness(node0->v_friction, fri_v0dq2, cross_index0 + 1, node_index2, h);
+	}
+
+	if (!node1->onBorder)
+	{
+		MatrixXd fri_v1dq0 = -0.5*node1->normal.transpose()*Fq1dq0;
+		MatrixXd fri_v1dq1 = -0.5*node1->normal.transpose()*Fq1dq1;
+		MatrixXd fri_v1dq2 = -0.5*node1->normal.transpose()*Fq1dq2;
+
+		fillGlobalStiffness(node1->v_friction, fri_v1dq0, cross_index1 + 1, node_index0, h);
+		fillGlobalStiffness(node1->v_friction, fri_v1dq1, cross_index1 + 1, node_index1, h);
+		fillGlobalStiffness(node1->v_friction, fri_v1dq2, cross_index1 + 1, node_index2, h);
+	}
+
+	if (!node2->onBorder)
+	{ 
+		MatrixXd fri_v2dq0 = -0.5*node2->normal.transpose()*Fq2dq0;
+		MatrixXd fri_v2dq1 = -0.5*node2->normal.transpose()*Fq2dq1;
+		MatrixXd fri_v2dq2 = -0.5*node2->normal.transpose()*Fq2dq2;
+
+		fillGlobalStiffness(node2->v_friction, fri_v2dq0, cross_index2 + 1, node_index0, h);
+		fillGlobalStiffness(node2->v_friction, fri_v2dq1, cross_index2 + 1, node_index1, h);
+		fillGlobalStiffness(node2->v_friction, fri_v2dq2, cross_index2 + 1, node_index2, h);
+	}
 
 	/* Euler Part */
 	if (!node1->onBorder)
 	{
-		int cross_index1 = nodes_size * 3 + node1->cross_index * 2;
-
 		double Fv1dv1 = -2 * Kb*theta*theta / pow((v1 - v2), 3);
 		_K.push_back(T(cross_index1 + 1, cross_index1 + 1, -h*h*Fv1dv1));
 
@@ -273,6 +367,24 @@ void BendSpring::solveV(vector<T>& _K, VectorXd& f, int nodes_size, double h)
 		fillGlobalStiffness(_K, Fq1dv1, node_index1, cross_index1 + 1, h);
 		fillGlobalStiffness(_K, Fq2dv1, node_index2, cross_index1 + 1, h);
 		fillGlobalStiffness(_K, Fq0dv1, node_index0, cross_index1 + 1, h);
+
+		if (!node0->onBorder)
+		{
+			MatrixXd fri_v0dv1 = -0.5*node0->normal.transpose()*Fq0dv1;
+			fillGlobalStiffness(node0->v_friction, fri_v0dv1, cross_index0 + 1, cross_index1 + 1, h);
+		}
+
+		if (!node1->onBorder)
+		{
+			MatrixXd fri_v1dv1 = -0.5*node1->normal.transpose()*Fq1dv1;
+			fillGlobalStiffness(node1->v_friction, fri_v1dv1, cross_index1 + 1, cross_index1 + 1, h);
+		}
+
+		if (!node2->onBorder)
+		{
+			MatrixXd fri_v2dv1 = -0.5*node2->normal.transpose()*Fq2dv1;
+			fillGlobalStiffness(node2->v_friction, fri_v2dv1, cross_index2 + 1, cross_index1 + 1, h);
+		}
 
 		MatrixXd Fv1dq1 = 2 * Kb*theta / (l1*(v1 - v2)*(v1 - v2)*sin(theta))*d2.transpose()*P1;
 		MatrixXd Fv1dq2 = 2 * Kb*theta / (l2*(v1 - v2)*(v1 - v2)*sin(theta))*d1.transpose()*P2;
@@ -284,8 +396,6 @@ void BendSpring::solveV(vector<T>& _K, VectorXd& f, int nodes_size, double h)
 
 	if (!node2->onBorder)
 	{
-		int cross_index2 = nodes_size * 3 + node2->cross_index * 2;
-
 		double Fv2dv2 = -2 * Kb*theta*theta / pow((v1 - v2), 3);
 		_K.push_back(T(cross_index2, cross_index2, -h*h*Fv2dv2));
 
@@ -295,6 +405,24 @@ void BendSpring::solveV(vector<T>& _K, VectorXd& f, int nodes_size, double h)
 		fillGlobalStiffness(_K, Fq1dv2, node_index1, cross_index2 + 1, h);
 		fillGlobalStiffness(_K, Fq2dv2, node_index2, cross_index2 + 1, h);
 		fillGlobalStiffness(_K, Fq0dv2, node_index0, cross_index2 + 1, h);
+
+		if (!node0->onBorder)
+		{
+			MatrixXd fri_v0dv2 = -0.5*node0->normal.transpose()*Fq0dv2;
+			fillGlobalStiffness(node0->v_friction, fri_v0dv2, cross_index0 + 1, cross_index2 + 1, h);
+		}
+
+		if (!node1->onBorder)
+		{
+			MatrixXd fri_v1dv2 = -0.5*node1->normal.transpose()*Fq1dv2;
+			fillGlobalStiffness(node1->v_friction, fri_v1dv2, cross_index1 + 1, cross_index2 + 1, h);
+		}
+
+		if (!node2->onBorder)
+		{
+			MatrixXd fri_v2dv2 = -0.5*node2->normal.transpose()*Fq2dv2;
+			fillGlobalStiffness(node2->v_friction, fri_v2dv2, cross_index2 + 1, cross_index2 + 1, h);
+		}
 
 		MatrixXd Fv2dq1 = -2 * Kb*theta / (l1*(v1 - v2)*(v1 - v2)*sin(theta))*d2.transpose()*P1;
 		MatrixXd Fv2dq2 = -2 * Kb*theta / (l2*(v1 - v2)*(v1 - v2)*sin(theta))*d1.transpose()*P2;
@@ -306,9 +434,6 @@ void BendSpring::solveV(vector<T>& _K, VectorXd& f, int nodes_size, double h)
 
 	if (!node1->onBorder && !node2->onBorder)
 	{
-		int cross_index1 = nodes_size * 3 + node1->cross_index * 2;
-		int cross_index2 = nodes_size * 3 + node2->cross_index * 2;
-
 		double Fv1dv2 = 2 * Kb*theta*theta / pow((v1 - v2), 3);
 		double Fv2dv1 = Fv1dv2;
 

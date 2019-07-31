@@ -56,6 +56,9 @@ public:
 
 	bool onBorder;
 
+	std::vector<T> u_friction;
+	std::vector<T> v_friction;
+	
 	EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 };
 
