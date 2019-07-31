@@ -14,8 +14,8 @@ double mouseX = 0, mouseY = 0;
 bool firstMouse = true;
 
 /* ---Parameters--- */
-int cloth_width = 10;
-int cloth_height = 10;
+int cloth_width = 5;
+int cloth_height = 5;
 double R = 0.25e-3;
 double L = 1e-3;
 
