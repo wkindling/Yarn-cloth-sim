@@ -45,7 +45,7 @@ void Cloth::build()
 	{
 		for (int i = 0; i < width; i++) // v for weft (y)
 		{
-			Node* node = new Node(Vector3d(i*L, j*L, 0), i*L, j*L);
+			Node* node = new Node(Vector3d(0, i*L, -j*L), i*L, -j*L);
 
 			if ((i + j) % 2 == 0)
 			{
@@ -205,7 +205,7 @@ void Cloth::build()
 }
 
 /* Fill the generalized mass matrix */
-void Cloth::computeInertia()
+void Cloth::computeInertia(vector<T>& _K)
 {
 	M.setZero();
 	vector<T> _M;
@@ -233,10 +233,16 @@ void Cloth::computeInertia()
 			MatrixXd L1L0 = coeff * I;
 			MatrixXd L1L1 = coeff * 2 * I;
 
-			fillGlobal(_M, L0L0, node_index0, node_index0);
-			fillGlobal(_M, L0L1, node_index0, node_index1);
-			fillGlobal(_M, L1L0, node_index1, node_index0);
-			fillGlobal(_M, L1L1, node_index1, node_index1);
+			fillGlobalInertia(_M, L0L0, node_index0, node_index0);
+			fillGlobalInertia(_M, L0L1, node_index0, node_index1);
+			fillGlobalInertia(_M, L1L0, node_index1, node_index0);
+			fillGlobalInertia(_M, L1L1, node_index1, node_index1);
+
+			fillGlobalInertia(_K, L0L0, node_index0, node_index0);
+			fillGlobalInertia(_K, L0L1, node_index0, node_index1);
+			fillGlobalInertia(_K, L1L0, node_index1, node_index0);
+			fillGlobalInertia(_K, L1L1, node_index1, node_index1);
+
 
 			/* Euler Part */
 			if (!n0->onBorder)
@@ -245,10 +251,14 @@ void Cloth::computeInertia()
 
 				MatrixXd L0E0 = -2 * coeff* w;
 				MatrixXd E0L0 = -2 * coeff* w.transpose();
-				fillGlobal(_M, L0E0, node_index0, cross_index0);
-				fillGlobal(_M, E0L0, cross_index0, node_index0);
+				fillGlobalInertia(_M, L0E0, node_index0, cross_index0);
+				fillGlobalInertia(_M, E0L0, cross_index0, node_index0);
+
+				fillGlobalInertia(_K, L0E0, node_index0, cross_index0);
+				fillGlobalInertia(_K, E0L0, cross_index0, node_index0);
 
 				_M.push_back(T(cross_index0, cross_index0, 2 * coeff*w.dot(w)));
+				_K.push_back(T(cross_index0, cross_index0, 2 * coeff*w.dot(w)));
 			}
 
 			if (!n0->onBorder && !n1->onBorder)
@@ -258,17 +268,25 @@ void Cloth::computeInertia()
 
 				MatrixXd L0E1 = -coeff * w;
 				MatrixXd E0L1 = -coeff * w.transpose();
-				fillGlobal(_M, L0E1, node_index0, cross_index1);
-				fillGlobal(_M, E0L1, cross_index0, node_index1);
+				fillGlobalInertia(_M, L0E1, node_index0, cross_index1);
+				fillGlobalInertia(_M, E0L1, cross_index0, node_index1);
+
+				fillGlobalInertia(_K, L0E1, node_index0, cross_index1);
+				fillGlobalInertia(_K, E0L1, cross_index0, node_index1);
 
 				_M.push_back(T(cross_index0, cross_index1, coeff*w.dot(w)));
+				_K.push_back(T(cross_index0, cross_index1, coeff*w.dot(w)));
 
 				MatrixXd L1E0 = -coeff * w;
 				MatrixXd E1L0 = -coeff * w.transpose();
-				fillGlobal(_M, L1E0, node_index1, cross_index0);
-				fillGlobal(_M, E1L0, cross_index1, node_index0);
+				fillGlobalInertia(_M, L1E0, node_index1, cross_index0);
+				fillGlobalInertia(_M, E1L0, cross_index1, node_index0);
+
+				fillGlobalInertia(_K, L1E0, node_index1, cross_index0);
+				fillGlobalInertia(_K, E1L0, cross_index1, node_index0);
 
 				_M.push_back(T(cross_index1, cross_index0, coeff*w.dot(w)));
+				_K.push_back(T(cross_index1, cross_index0, coeff*w.dot(w)));
 			}
 
 			if (!n1->onBorder)
@@ -277,10 +295,14 @@ void Cloth::computeInertia()
 
 				MatrixXd L1E1 = -2 * coeff*w;
 				MatrixXd E1L1 = -2 * coeff*w.transpose();
-				fillGlobal(_M, L1E1, node_index1, cross_index1);
-				fillGlobal(_M, E1L1, cross_index1, node_index1);
+				fillGlobalInertia(_M, L1E1, node_index1, cross_index1);
+				fillGlobalInertia(_M, E1L1, cross_index1, node_index1);
+
+				fillGlobalInertia(_K, L1E1, node_index1, cross_index1);
+				fillGlobalInertia(_K, E1L1, cross_index1, node_index1);
 
 				_M.push_back(T(cross_index1, cross_index1, 2 * coeff*w.dot(w)));
+				_K.push_back(T(cross_index1, cross_index1, 2 * coeff*w.dot(w)));
 			}
 		}
 		else if (stretch_springs[i]->springType == Weft)
@@ -296,10 +318,15 @@ void Cloth::computeInertia()
 			MatrixXd L1L0 = coeff * I;
 			MatrixXd L1L1 = coeff * 2 * I;
 
-			fillGlobal(_M, L0L0, node_index0, node_index0);
-			fillGlobal(_M, L0L1, node_index0, node_index1);
-			fillGlobal(_M, L1L0, node_index1, node_index0);
-			fillGlobal(_M, L1L1, node_index1, node_index1);
+			fillGlobalInertia(_M, L0L0, node_index0, node_index0);
+			fillGlobalInertia(_M, L0L1, node_index0, node_index1);
+			fillGlobalInertia(_M, L1L0, node_index1, node_index0);
+			fillGlobalInertia(_M, L1L1, node_index1, node_index1);
+
+			fillGlobalInertia(_K, L0L0, node_index0, node_index0);
+			fillGlobalInertia(_K, L0L1, node_index0, node_index1);
+			fillGlobalInertia(_K, L1L0, node_index1, node_index0);
+			fillGlobalInertia(_K, L1L1, node_index1, node_index1);
 
 			/* Euler Part */
 			if (!n0->onBorder)
@@ -308,10 +335,14 @@ void Cloth::computeInertia()
 
 				MatrixXd L0E0 = -2 * coeff*w;
 				MatrixXd E0L0 = -2 * coeff*w.transpose();
-				fillGlobal(_M, L0E0, node_index0, cross_index0 + 1);
-				fillGlobal(_M, E0L0, cross_index0 + 1, node_index1);
+				fillGlobalInertia(_M, L0E0, node_index0, cross_index0 + 1);
+				fillGlobalInertia(_M, E0L0, cross_index0 + 1, node_index1);
+
+				fillGlobalInertia(_K, L0E0, node_index0, cross_index0 + 1);
+				fillGlobalInertia(_K, E0L0, cross_index0 + 1, node_index1);
 
 				_M.push_back(T(cross_index0 + 1, cross_index0 + 1, 2 * coeff*w.dot(w)));
+				_K.push_back(T(cross_index0 + 1, cross_index0 + 1, 2 * coeff*w.dot(w)));
 			}
 
 			if (!n0->onBorder && !n1->onBorder)
@@ -321,17 +352,25 @@ void Cloth::computeInertia()
 
 				MatrixXd L0E1 = -coeff * w;
 				MatrixXd E0L1 = -coeff * w.transpose();
-				fillGlobal(_M, L0E1, node_index0, cross_index1 + 1);
-				fillGlobal(_M, E0L1, cross_index0 + 1, node_index1);
+				fillGlobalInertia(_M, L0E1, node_index0, cross_index1 + 1);
+				fillGlobalInertia(_M, E0L1, cross_index0 + 1, node_index1);
+
+				fillGlobalInertia(_K, L0E1, node_index0, cross_index1 + 1);
+				fillGlobalInertia(_K, E0L1, cross_index0 + 1, node_index1);
 
 				_M.push_back(T(cross_index0 + 1, cross_index1 + 1, coeff*w.dot(w)));
+				_K.push_back(T(cross_index0 + 1, cross_index1 + 1, coeff*w.dot(w)));
 
 				MatrixXd L1E0 = -coeff * w;
 				MatrixXd E1L0 = -coeff * w.transpose();
-				fillGlobal(_M, L1E0, node_index1, cross_index0 + 1);
-				fillGlobal(_M, E1L0, cross_index1 + 1, node_index0);
+				fillGlobalInertia(_M, L1E0, node_index1, cross_index0 + 1);
+				fillGlobalInertia(_M, E1L0, cross_index1 + 1, node_index0);
+
+				fillGlobalInertia(_K, L1E0, node_index1, cross_index0 + 1);
+				fillGlobalInertia(_K, E1L0, cross_index1 + 1, node_index0);
 
 				_M.push_back(T(cross_index1 + 1, cross_index0 + 1, coeff*w.dot(w)));
+				_K.push_back(T(cross_index1 + 1, cross_index0 + 1, coeff*w.dot(w)));
 			}
 
 			if (!n1->onBorder)
@@ -340,10 +379,14 @@ void Cloth::computeInertia()
 
 				MatrixXd L1E1 = -2 * coeff*w;
 				MatrixXd E1L1 = -2 * coeff*w.transpose();
-				fillGlobal(_M, L1E1, node_index1, cross_index1 + 1);
-				fillGlobal(_M, E1L1, cross_index1 + 1, node_index1);
+				fillGlobalInertia(_M, L1E1, node_index1, cross_index1 + 1);
+				fillGlobalInertia(_M, E1L1, cross_index1 + 1, node_index1);
+
+				fillGlobalInertia(_K, L1E1, node_index1, cross_index1 + 1);
+				fillGlobalInertia(_K, E1L1, cross_index1 + 1, node_index1);
 
 				_M.push_back(T(cross_index1 + 1, cross_index1 + 1, 2 * coeff*w.dot(w)));
+				_K.push_back(T(cross_index1 + 1, cross_index1 + 1, 2 * coeff*w.dot(w)));
 			}
 		}
 	}
@@ -351,28 +394,29 @@ void Cloth::computeInertia()
 }
 
 /* Fill the stiffness matrix and force vector */
-void Cloth::computeForce(Vector3d gravity)
+void Cloth::computeForce(Vector3d gravity, double h)
 {
 	/* Initialize */
 	f.setZero();
 	K.setZero();
 	vector<T> _K;
 
+	computeInertia(_K);
+
 	for (int i = 0; i < nodes.size(); i++)
 	{
 		nodes[i]->compressForce = 0;
 	}
 
-
 	/* Compute stretching and bending, while storing compression force */
 	for (int i = 0; i < stretch_springs.size(); i++)
 	{
-		stretch_springs[i]->solve(_K, f, nodes.size());
+		stretch_springs[i]->solve(_K, f, nodes.size(), h);
 	}
 
 	for (int i = 0; i < bend_springs.size(); i++)
 	{
-		//bend_springs[i]->solve(_K, f, nodes.size());
+		bend_springs[i]->solve(_K, f, nodes.size(), h);
 	}
 
 	for (int i = 0; i < nodes.size(); i++)
@@ -382,39 +426,108 @@ void Cloth::computeForce(Vector3d gravity)
 
 	for (int i = 0; i < nodes.size(); i++)
 	{
-		//nodes[i]->getFriction(mu, Kf, _K, f, nodes.size());
+		//nodes[i]->getFriction(mu, Kf, _K, f, nodes.size(), h);
 	}
 
+	/* Gravity Force */
 	for (int i = 0; i < stretch_springs.size(); i++)
 	{
 		Node* n0 = stretch_springs[i]->node0;
 		Node* n1 = stretch_springs[i]->node1;
 
-		int index0 = n0->node_index * 3;
-		int index1 = n1->node_index * 3;
+		int node_index0 = n0->node_index * 3;
+		int node_index1 = n1->node_index * 3;
 
 		if (stretch_springs[i]->springType == Warp)
 		{
 			double delta_u = n1->u - n0->u;
-			f.segment<3>(index0) += 0.5*rho*delta_u*gravity;
-			f.segment<3>(index1) += 0.5*rho*delta_u*gravity;
+			f.segment<3>(node_index0) += 0.5*rho*delta_u*gravity;
+			f.segment<3>(node_index1) += 0.5*rho*delta_u*gravity;
+
+			if (!n0->onBorder)
+			{
+				int cross_index0 = nodes.size() * 3 + n0->cross_index * 2;
+				double Fu0 = -rho * gravity.dot((n0->position + n1->position) / 2.0);
+				f(cross_index0) += Fu0;
+
+				MatrixXd Fu0dx0 = -0.5*rho*gravity.transpose();
+				MatrixXd Fu0dx1 = -0.5*rho*gravity.transpose();
+				fillGlobalStiffness(_K, Fu0dx0, cross_index0, node_index0, h);
+				fillGlobalStiffness(_K, Fu0dx1, cross_index0, node_index1, h);
+
+				MatrixXd Fx0du0 = -0.5*rho*gravity;
+				MatrixXd Fx1du0 = -0.5*rho*gravity;
+				fillGlobalStiffness(_K, Fx0du0, node_index0, cross_index0, h);
+				fillGlobalStiffness(_K, Fx1du0, node_index1, cross_index0, h);
+			}
+
+			if (!n1->onBorder)
+			{
+				int cross_index1 = nodes.size() * 3 + n1->cross_index * 2;
+				double Fu1 = rho * gravity.dot((n0->position + n1->position) / 2.0);
+				f(cross_index1) += Fu1;
+
+				MatrixXd Fu1dx0 = 0.5*rho*gravity.transpose();
+				MatrixXd Fu1dx1 = 0.5*rho*gravity.transpose();
+				fillGlobalStiffness(_K, Fu1dx0, cross_index1, node_index0, h);
+				fillGlobalStiffness(_K, Fu1dx1, cross_index1, node_index1, h);
+
+				MatrixXd Fx0du1 = 0.5*rho*gravity;
+				MatrixXd Fx1du1 = 0.5*rho*gravity;
+				fillGlobalStiffness(_K, Fx0du1, node_index0, cross_index1, h);
+				fillGlobalStiffness(_K, Fx1du1, node_index1, cross_index1, h);
+			}
 		}
 		else if (stretch_springs[i]->springType == Weft)
 		{
 			double delta_v = n1->v - n0->v;
-			f.segment<3>(index0) += 0.5*rho*delta_v*gravity;
-			f.segment<3>(index1) += 0.5*rho*delta_v*gravity;
+			f.segment<3>(node_index0) += 0.5*rho*delta_v*gravity;
+			f.segment<3>(node_index1) += 0.5*rho*delta_v*gravity;
+
+			if (!n0->onBorder)
+			{
+				int cross_index0 = nodes.size() * 3 + n0->cross_index * 2;
+				double Fv0 = -rho * gravity.dot((n0->position + n1->position) / 2.0);
+				f(cross_index0 + 1) += Fv0;
+
+				MatrixXd Fv0dx0 = -0.5*rho*gravity.transpose();
+				MatrixXd Fv0dx1 = -0.5*rho*gravity.transpose();
+				fillGlobalStiffness(_K, Fv0dx0, cross_index0 + 1, node_index0, h);
+				fillGlobalStiffness(_K, Fv0dx1, cross_index0 + 1, node_index1, h);
+
+				MatrixXd Fx0dv0 = -0.5*rho*gravity;
+				MatrixXd Fx1dv0 = -0.5*rho*gravity;
+				fillGlobalStiffness(_K, Fx0dv0, node_index0, cross_index0 + 1, h);
+				fillGlobalStiffness(_K, Fx1dv0, node_index1, cross_index0 + 1, h);
+			}
+
+			if (!n1->onBorder)
+			{
+				int cross_index1 = nodes.size() * 3 + n1->cross_index * 2;
+				double Fv1 = rho * gravity.dot((n0->position + n1->position) / 2.0);
+				f(cross_index1 + 1) += Fv1;
+
+				MatrixXd Fv1dx0 = 0.5*rho*gravity.transpose();
+				MatrixXd Fv1dx1 = 0.5*rho*gravity.transpose();
+				fillGlobalStiffness(_K, Fv1dx0, cross_index1 + 1, node_index0, h);
+				fillGlobalStiffness(_K, Fv1dx1, cross_index1 + 1, node_index1, h);
+
+				MatrixXd Fx0dv1 = 0.5*rho*gravity;
+				MatrixXd Fx1dv1 = 0.5*rho*gravity;
+				fillGlobalStiffness(_K, Fx0dv1, node_index0, cross_index1 + 1, h);
+				fillGlobalStiffness(_K, Fx1dv1, node_index1, cross_index1 + 1, h);
+			}
 		}
 	}
 
 	for (int i = 0; i < shear_springs.size(); i++)
 	{
-		//shear_springs[i]->solve(_K, f);
+		shear_springs[i]->solve(_K, f, h);
 	}
 
 	for (int i = 0; i < parallel_contact_springs.size(); i++)
 	{
-		//parallel_contact_springs[i]->solve(_K, f, nodes.size());
+		parallel_contact_springs[i]->solve(_K, f, nodes.size(), h);
 	}
 
 	K.setFromTriplets(_K.begin(), _K.end());
@@ -445,9 +558,7 @@ void Cloth::step(double h)
 		nodes[i]->getNormal();
 	}
 
-	computeInertia();
-
-	computeForce(Vector3d(0,0,-9.8));
+	computeForce(Vector3d(0, 0, -9.8), h);
 	
 	solve(h);
 
@@ -476,9 +587,10 @@ void Cloth::step(double h)
 
 void Cloth::solve(double h)
 {
-	SparseMatrix<double> A = M - h * h*K;
+	SparseMatrix<double> A = K;
 	VectorXd b = M * v + h * f;
 	
+	//ConjugateGradient<SparseMatrix<double>, Lower | Upper> lscg;
 	LeastSquaresConjugateGradient<SparseMatrix<double>> lscg;
 	lscg.compute(A);
 	v = lscg.solve(b);
@@ -490,5 +602,5 @@ void Cloth::solve(double h)
 	MatrixXd MM = M;
 	MatrixXd KK = K;
 	MatrixXd AA = A;
-	cout << "M " << MM.determinant() << "  K " << KK.determinant() << " A "<< AA.determinant() << endl;
+	//cout << "M " << MM.determinant() << "  K " << KK.determinant() << " A "<< AA.determinant() << endl;
 }

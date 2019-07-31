@@ -29,16 +29,17 @@ StretchSpring::StretchSpring(Node* n0, Node* n1, double _Y, double _R, YarnType 
 
 StretchSpring::~StretchSpring() {}
 
-void StretchSpring::solve(vector<T>& _K, VectorXd& f, int nodes_size)
+void StretchSpring::solve(vector<T>& _K, VectorXd& f, int nodes_size, double h)
 {
-	if (springType == Weft) solveV(_K, f, nodes_size);
+	if (springType == Weft) solveV(_K, f, nodes_size, h);
 	
-	else if (springType == Warp) solveU(_K, f, nodes_size);
+	else if (springType == Warp) solveU(_K, f, nodes_size, h);
 
+	//cout << (node1->position - node0->position).norm() << endl;
 	return;
 }
 
-void StretchSpring::solveU(vector<T>& _K, VectorXd& f, int nodes_size)
+void StretchSpring::solveU(vector<T>& _K, VectorXd& f, int nodes_size, double h)
 {
 	double l = (node1->position - node0->position).norm();
 	double delta_u = abs(node1->u - node0->u);
@@ -84,10 +85,10 @@ void StretchSpring::solveU(vector<T>& _K, VectorXd& f, int nodes_size)
 	MatrixXd Fq1dq0 = -Fq1dq1;
 	MatrixXd Fq0dq1 = Fq1dq0;
 
-	fillGlobal(_K, Fq1dq1, node_index1, node_index1);
-	fillGlobal(_K, Fq0dq0, node_index0, node_index0);
-	fillGlobal(_K, Fq1dq0, node_index1, node_index0);
-	fillGlobal(_K, Fq0dq1, node_index0, node_index1);
+	fillGlobalStiffness(_K, Fq1dq1, node_index1, node_index1, h);
+	fillGlobalStiffness(_K, Fq0dq0, node_index0, node_index0, h);
+	fillGlobalStiffness(_K, Fq1dq0, node_index1, node_index0, h);
+	fillGlobalStiffness(_K, Fq0dq1, node_index0, node_index1, h);
 
 	/* Euler Part */
 	if (!node0->onBorder)
@@ -95,17 +96,17 @@ void StretchSpring::solveU(vector<T>& _K, VectorXd& f, int nodes_size)
 		int cross_index0 = nodes_size * 3 + node0->cross_index * 2;
 
 		double Fu0du0 = -Ks * w.norm()*w.norm() / delta_u;
-		_K.push_back(T(cross_index0, cross_index0, Fu0du0));
+		_K.push_back(T(cross_index0, cross_index0, -h*h*Fu0du0));
 		
 		MatrixXd Fq0du0 = Ks * w.norm() / delta_u * d;
 		MatrixXd Fq1du0 = -Fq0du0;
-		fillGlobal(_K, Fq0du0, node_index0, cross_index0);
-		fillGlobal(_K, Fq1du0, node_index1, cross_index0);
+		fillGlobalStiffness(_K, Fq0du0, node_index0, cross_index0, h);
+		fillGlobalStiffness(_K, Fq1du0, node_index1, cross_index0, h);
 
 		MatrixXd Fu0dq0 = Ks / delta_u * w.transpose();
 		MatrixXd Fu0dq1 = -Fu0dq0;
-		fillGlobal(_K, Fu0dq0, cross_index0, node_index0);
-		fillGlobal(_K, Fu0dq1, cross_index0, node_index1);
+		fillGlobalStiffness(_K, Fu0dq0, cross_index0, node_index0, h);
+		fillGlobalStiffness(_K, Fu0dq1, cross_index0, node_index1, h);
 	}
 
 	if (!node1->onBorder)
@@ -113,17 +114,17 @@ void StretchSpring::solveU(vector<T>& _K, VectorXd& f, int nodes_size)
 		int cross_index1 = nodes_size * 3 + node1->cross_index * 2;
 		
 		double Fu1du1 = -Ks * w.norm()*w.norm() / delta_u;
-		_K.push_back(T(cross_index1, cross_index1, Fu1du1));
+		_K.push_back(T(cross_index1, cross_index1, -h * h*Fu1du1));
 		
 		MatrixXd Fq1du1 = Ks * w.norm() / delta_u * d;
 		MatrixXd Fq0du1 = -Fq1du1;
-		fillGlobal(_K, Fq1du1, node_index1, cross_index1);
-		fillGlobal(_K, Fq0du1, node_index0, cross_index1);
+		fillGlobalStiffness(_K, Fq1du1, node_index1, cross_index1, h);
+		fillGlobalStiffness(_K, Fq0du1, node_index0, cross_index1, h);
 
 		MatrixXd Fu1dq1 = Ks / delta_u * w.transpose();
 		MatrixXd Fu1dq0 = -Fu1dq1;
-		fillGlobal(_K, Fu1dq1, cross_index1, node_index1);
-		fillGlobal(_K, Fu1dq0, cross_index1, node_index0);
+		fillGlobalStiffness(_K, Fu1dq1, cross_index1, node_index1, h);
+		fillGlobalStiffness(_K, Fu1dq0, cross_index1, node_index0, h);
 	}
 
 	if (!node0->onBorder && !node1->onBorder)
@@ -134,12 +135,12 @@ void StretchSpring::solveU(vector<T>& _K, VectorXd& f, int nodes_size)
 		double Fu1du0 = Ks * w.norm()*w.norm() / delta_u;
 		double Fu0du1 = Fu1du0;
 
-		_K.push_back(T(cross_index1, cross_index0, Fu1du0));
-		_K.push_back(T(cross_index0, cross_index1, Fu0du1));
+		_K.push_back(T(cross_index1, cross_index0, -h * h*Fu1du0));
+		_K.push_back(T(cross_index0, cross_index1, -h * h*Fu0du1));
 	}
 }
 
-void StretchSpring::solveV(vector<T>& _K, VectorXd& f, int nodes_size)
+void StretchSpring::solveV(vector<T>& _K, VectorXd& f, int nodes_size, double h)
 {
 	double l = (node1->position - node0->position).norm();
 	double delta_v = abs(node1->v - node0->v);
@@ -186,10 +187,10 @@ void StretchSpring::solveV(vector<T>& _K, VectorXd& f, int nodes_size)
 	MatrixXd Fq1dq0 = -Fq1dq1;
 	MatrixXd Fq0dq1 = Fq1dq0;
 
-	fillGlobal(_K, Fq1dq1, node_index1, node_index1);
-	fillGlobal(_K, Fq0dq0, node_index0, node_index0);
-	fillGlobal(_K, Fq1dq0, node_index1, node_index0);
-	fillGlobal(_K, Fq0dq1, node_index0, node_index1);
+	fillGlobalStiffness(_K, Fq1dq1, node_index1, node_index1, h);
+	fillGlobalStiffness(_K, Fq0dq0, node_index0, node_index0, h);
+	fillGlobalStiffness(_K, Fq1dq0, node_index1, node_index0, h);
+	fillGlobalStiffness(_K, Fq0dq1, node_index0, node_index1, h);
 
 	/* Euler Part */
 	if (!node0->onBorder)
@@ -197,17 +198,17 @@ void StretchSpring::solveV(vector<T>& _K, VectorXd& f, int nodes_size)
 		int cross_index0 = nodes_size * 3 + node0->cross_index * 2;
 
 		double Fv0dv0 = -Ks * w.norm()*w.norm() / delta_v;
-		_K.push_back(T(cross_index0 + 1, cross_index0 + 1, Fv0dv0));
+		_K.push_back(T(cross_index0 + 1, cross_index0 + 1, -h * h*Fv0dv0));
 
 		MatrixXd Fq0dv0 = Ks * w.norm() / delta_v * d;
 		MatrixXd Fq1dv0 = -Fq0dv0;
-		fillGlobal(_K, Fq0dv0, node_index0, cross_index0 + 1);
-		fillGlobal(_K, Fq1dv0, node_index1, cross_index0 + 1);
+		fillGlobalStiffness(_K, Fq0dv0, node_index0, cross_index0 + 1, h);
+		fillGlobalStiffness(_K, Fq1dv0, node_index1, cross_index0 + 1, h);
 
 		MatrixXd Fv0dq0 = Ks / delta_v * w.transpose();
 		MatrixXd Fv0dq1 = -Fv0dq0;
-		fillGlobal(_K, Fv0dq0, cross_index0 + 1, node_index0);
-		fillGlobal(_K, Fv0dq1, cross_index0 + 1, node_index1);
+		fillGlobalStiffness(_K, Fv0dq0, cross_index0 + 1, node_index0, h);
+		fillGlobalStiffness(_K, Fv0dq1, cross_index0 + 1, node_index1, h);
 	}
 
 	if (!node1->onBorder)
@@ -215,17 +216,17 @@ void StretchSpring::solveV(vector<T>& _K, VectorXd& f, int nodes_size)
 		int cross_index1 = nodes_size * 3 + node1->cross_index * 2;
 
 		double Fv1dv1 = -Ks * w.norm()*w.norm() / delta_v;
-		_K.push_back(T(cross_index1 + 1, cross_index1 + 1, Fv1dv1));
+		_K.push_back(T(cross_index1 + 1, cross_index1 + 1, -h * h*Fv1dv1));
 
 		MatrixXd Fq1dv1 = Ks * w.norm() / delta_v * d;
 		MatrixXd Fq0dv1 = -Fq1dv1;
-		fillGlobal(_K, Fq1dv1, node_index1, cross_index1 + 1);
-		fillGlobal(_K, Fq0dv1, node_index0, cross_index1 + 1);
+		fillGlobalStiffness(_K, Fq1dv1, node_index1, cross_index1 + 1, h);
+		fillGlobalStiffness(_K, Fq0dv1, node_index0, cross_index1 + 1, h);
 
 		MatrixXd Fv1dq1 = Ks / delta_v * w.transpose();
 		MatrixXd Fv1dq0 = -Fv1dq1;
-		fillGlobal(_K, Fv1dq1, cross_index1 + 1, node_index1);
-		fillGlobal(_K, Fv1dq0, cross_index1 + 1, node_index0);
+		fillGlobalStiffness(_K, Fv1dq1, cross_index1 + 1, node_index1, h);
+		fillGlobalStiffness(_K, Fv1dq0, cross_index1 + 1, node_index0, h);
 	}
 
 	if (!node0->onBorder && !node1->onBorder)
@@ -236,8 +237,8 @@ void StretchSpring::solveV(vector<T>& _K, VectorXd& f, int nodes_size)
 		double Fv1dv0 = Ks * w.norm()*w.norm() / delta_v;;
 		double Fv0dv1 = Fv1dv0;
 
-		_K.push_back(T(cross_index1, cross_index0, Fv1dv0));
-		_K.push_back(T(cross_index0, cross_index1, Fv0dv1));
+		_K.push_back(T(cross_index1, cross_index0, -h * h*Fv1dv0));
+		_K.push_back(T(cross_index0, cross_index1, -h * h*Fv0dv1));
 	}
 }
 
@@ -266,8 +267,8 @@ void StretchSpring::draw()
 		{
 			pos1 = node1->position;
 		}
-		glVertex3d(pos0.x(), pos0.y(), pos0.z());
-		glVertex3d(pos1.x(), pos1.y(), pos1.z());
+		glVertex3d(pos0.x()*1e3, pos0.y()*1e3, pos0.z()*1e3);
+		glVertex3d(pos1.x()*1e3, pos1.y()*1e3, pos1.z()*1e3);
 		glEnd();
 	}
 	else if (springType == Warp)
@@ -293,8 +294,8 @@ void StretchSpring::draw()
 		{
 			pos1 = node1->position;
 		}		
-		glVertex3d(pos0.x(), pos0.y(), pos0.z());
-		glVertex3d(pos1.x(), pos1.y(), pos1.z());
+		glVertex3d(pos0.x()*1e3, pos0.y()*1e3, pos0.z()*1e3);
+		glVertex3d(pos1.x()*1e3, pos1.y()*1e3, pos1.z()*1e3);
 		glEnd();
 	}
 }

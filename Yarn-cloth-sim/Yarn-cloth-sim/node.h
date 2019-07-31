@@ -32,7 +32,7 @@ public:
 	virtual ~Node();
 
 	Eigen::Vector3d getNormal();
-	void getFriction(double mu, double Kf, std::vector<T>& _K, Eigen::VectorXd& f, int nodes_size);
+	void getFriction(double mu, double Kf, std::vector<T>& _K, Eigen::VectorXd& f, int nodes_size, double h);
 
 public:
 	//Normal Node

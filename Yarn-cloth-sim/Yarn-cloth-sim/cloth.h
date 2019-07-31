@@ -22,8 +22,8 @@ public:
 	void step(double h);
 	void draw();
 
-	void computeForce(Eigen::Vector3d gravity);
-	void computeInertia();
+	void computeForce(Eigen::Vector3d gravity, double h);
+	void computeInertia(std::vector<T>& _K);
 	void solve(double h);
 	
 public:

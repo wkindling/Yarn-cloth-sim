@@ -10,7 +10,9 @@
 
 typedef Eigen::Triplet<double> T;
 
-void fillGlobal(std::vector<T>& _M, Eigen::MatrixXd& block, int index0, int index1);
+void fillGlobalInertia(std::vector<T>& _M, Eigen::MatrixXd& block, int index0, int index1);
+
+void fillGlobalStiffness(std::vector<T>& _M, Eigen::MatrixXd& block, int index0, int index1, double h);
 
 int sign(double number);
 

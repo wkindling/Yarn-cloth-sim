@@ -14,9 +14,9 @@ public:
 	ParallelContactSpring(Node* n0, Node* n1, double _Kc, double _R, double _L, YarnType type);
 	virtual ~ParallelContactSpring();
 
-	void solve(std::vector<T>& _K, Eigen::VectorXd& f, int nodes_size);
-	void solveU(std::vector<T>& _K, Eigen::VectorXd& f, int nodes_size);
-	void solveV(std::vector<T>& _K, Eigen::VectorXd& f, int nodes_size);
+	void solve(std::vector<T>& _K, Eigen::VectorXd& f, int nodes_size, double h);
+	void solveU(std::vector<T>& _K, Eigen::VectorXd& f, int nodes_size, double h);
+	void solveV(std::vector<T>& _K, Eigen::VectorXd& f, int nodes_size, double h);
 
 public:
 	Node *node0, *node1;

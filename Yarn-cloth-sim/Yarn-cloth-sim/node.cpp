@@ -109,7 +109,7 @@ Vector3d Node::getNormal()
 /* Compute friction force */
 // Ignore damping force yet ... Because damping force may have some influence on global motion equation
 // Currently I ignore the computation of Jacobians for friction because it is too complicated
-void Node::getFriction(double mu, double Kf, vector<T>& _K, VectorXd& f, int nodes_size)
+void Node::getFriction(double mu, double Kf, vector<T>& _K, VectorXd& f, int nodes_size, double h)
 {
 	if (this->onBorder) return;
 

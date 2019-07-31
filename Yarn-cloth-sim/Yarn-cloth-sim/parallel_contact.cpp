@@ -30,17 +30,17 @@ ParallelContactSpring::ParallelContactSpring(Node* n0, Node* n1, double _Kc, dou
 
 ParallelContactSpring::~ParallelContactSpring() {}
 
-void ParallelContactSpring::solve(vector<T>& _K, VectorXd& f, int nodes_size)
+void ParallelContactSpring::solve(vector<T>& _K, VectorXd& f, int nodes_size, double h)
 {
-	if (springType == Weft) solveV(_K, f, nodes_size);
+	if (springType == Weft) solveV(_K, f, nodes_size, h);
 
-	else if (springType == Warp) solveU(_K, f, nodes_size);
+	else if (springType == Warp) solveU(_K, f, nodes_size, h);
 	
 
 	return;
 }
 
-void ParallelContactSpring::solveU(vector<T>& _K, VectorXd& f, int nodes_size)
+void ParallelContactSpring::solveU(vector<T>& _K, VectorXd& f, int nodes_size, double h)
 {
 	double l = (node1->position - node0->position).norm();
 	double delta_u = abs(node1->u - node0->u);
@@ -62,7 +62,7 @@ void ParallelContactSpring::solveU(vector<T>& _K, VectorXd& f, int nodes_size)
 		f(cross_index0) += Fu0;
 
 		double Fu0du0 = -Kc * L;
-		_K.push_back(T(cross_index0, cross_index0, Fu0du0));
+		_K.push_back(T(cross_index0, cross_index0, -h*h*Fu0du0));
 	}
 
 	if (!node1->onBorder)
@@ -72,7 +72,7 @@ void ParallelContactSpring::solveU(vector<T>& _K, VectorXd& f, int nodes_size)
 		f(cross_index1) += Fu1;
 
 		double Fu1du1 = -Kc * L;
-		_K.push_back(T(cross_index1, cross_index1, Fu1du1));
+		_K.push_back(T(cross_index1, cross_index1, -h*h*Fu1du1));
 	}
 
 	if (!node0->onBorder && !node1->onBorder)
@@ -83,12 +83,12 @@ void ParallelContactSpring::solveU(vector<T>& _K, VectorXd& f, int nodes_size)
 		double Fu0du1 = Kc * L;
 		double Fu1du0 = Fu0du1;
 
-		_K.push_back(T(cross_index0, cross_index1, Fu0du1));
-		_K.push_back(T(cross_index1, cross_index0, Fu1du0));
+		_K.push_back(T(cross_index0, cross_index1, -h*h*Fu0du1));
+		_K.push_back(T(cross_index1, cross_index0, -h*h*Fu1du0));
 	}
 }
 
-void ParallelContactSpring::solveV(vector<T>& _K, VectorXd& f, int nodes_size)
+void ParallelContactSpring::solveV(vector<T>& _K, VectorXd& f, int nodes_size, double h)
 {
 	double l = (node1->position - node0->position).norm();
 	double delta_v = abs(node1->v - node0->v);
@@ -110,7 +110,7 @@ void ParallelContactSpring::solveV(vector<T>& _K, VectorXd& f, int nodes_size)
 		f(cross_index0 + 1) += Fv0;
 
 		double Fv0dv0 = -Kc * L;
-		_K.push_back(T(cross_index0 + 1, cross_index0 + 1, Fv0dv0));
+		_K.push_back(T(cross_index0 + 1, cross_index0 + 1, -h*h*Fv0dv0));
 	}
 
 	if (!node1->onBorder)
@@ -120,7 +120,7 @@ void ParallelContactSpring::solveV(vector<T>& _K, VectorXd& f, int nodes_size)
 		f(cross_index1 + 1) += Fv1;
 
 		double Fv1dv1 = -Kc * L;
-		_K.push_back(T(cross_index1 + 1, cross_index1 + 1, Fv1dv1));
+		_K.push_back(T(cross_index1 + 1, cross_index1 + 1, -h*h*Fv1dv1));
 	}
 
 	if (!node0->onBorder && !node1->onBorder)
@@ -131,7 +131,7 @@ void ParallelContactSpring::solveV(vector<T>& _K, VectorXd& f, int nodes_size)
 		double Fv0dv1 = Kc * L;
 		double Fv1dv0 = Fv0dv1;
 
-		_K.push_back(T(cross_index0 + 1, cross_index1 + 1, Fv0dv1));
-		_K.push_back(T(cross_index1 + 1, cross_index0 + 1, Fv1dv0));
+		_K.push_back(T(cross_index0 + 1, cross_index1 + 1, -h*h*Fv0dv1));
+		_K.push_back(T(cross_index1 + 1, cross_index0 + 1, -h*h*Fv1dv0));
 	}
 }

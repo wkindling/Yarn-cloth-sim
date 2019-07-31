@@ -14,10 +14,10 @@ public:
 	StretchSpring(Node* n0, Node* n1, double _Y, double _R, YarnType type);
 	virtual ~StretchSpring();
 
-	void solve(std::vector<T>& _K, Eigen::VectorXd& f, int nodes_size);
+	void solve(std::vector<T>& _K, Eigen::VectorXd& f, int nodes_size, double h);
 
-	void solveU(std::vector<T>& _K, Eigen::VectorXd& f, int nodes_size);
-	void solveV(std::vector<T>& _K, Eigen::VectorXd& f, int nodes_size);
+	void solveU(std::vector<T>& _K, Eigen::VectorXd& f, int nodes_size, double h);
+	void solveV(std::vector<T>& _K, Eigen::VectorXd& f, int nodes_size, double h);
 
 	void draw();
 

@@ -20,7 +20,7 @@ ShearSpring::ShearSpring(Node* n0, Node* n1, Node* n3, double _S, double _R, dou
 
 ShearSpring::~ShearSpring() {}
 
-void ShearSpring::solve(vector<T>& _K, VectorXd& f)
+void ShearSpring::solve(vector<T>& _K, VectorXd& f, double h)
 {
 	double l1 = (node1->position - node0->position).norm();
 	double l3 = (node3->position - node0->position).norm();
@@ -69,15 +69,15 @@ void ShearSpring::solve(vector<T>& _K, VectorXd& f)
 	MatrixXd Fq0dq3 = -(Fq1dq3 + Fq3dq3);
 	MatrixXd Fq0dq0 = -(Fq1dq0 + Fq3dq0);
 
-	fillGlobal(_K, Fq1dq1, index1, index1);
-	fillGlobal(_K, Fq1dq3, index1, index3);
-	fillGlobal(_K, Fq3dq1, index3, index1);
-	fillGlobal(_K, Fq3dq3, index3, index3);
+	fillGlobalStiffness(_K, Fq1dq1, index1, index1, h);
+	fillGlobalStiffness(_K, Fq1dq3, index1, index3, h);
+	fillGlobalStiffness(_K, Fq3dq1, index3, index1, h);
+	fillGlobalStiffness(_K, Fq3dq3, index3, index3, h);
 
-	fillGlobal(_K, Fq1dq0, index1, index0);
-	fillGlobal(_K, Fq3dq0, index3, index0);
-	fillGlobal(_K, Fq0dq1, index0, index1);
-	fillGlobal(_K, Fq0dq3, index0, index3);
-	fillGlobal(_K, Fq0dq0, index0, index0);
+	fillGlobalStiffness(_K, Fq1dq0, index1, index0, h);
+	fillGlobalStiffness(_K, Fq3dq0, index3, index0, h);
+	fillGlobalStiffness(_K, Fq0dq1, index0, index1, h);
+	fillGlobalStiffness(_K, Fq0dq3, index0, index3, h);
+	fillGlobalStiffness(_K, Fq0dq0, index0, index0, h);
 
 }
