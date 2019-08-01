@@ -133,7 +133,8 @@ void Node::getFriction(double mu, double Kf, vector<T>& _K, VectorXd& f, int nod
 
 		for (int i = 0; i < u_friction.size(); i++)
 		{
-			_K.push_back(u_friction[i]);
+			T temp(u_friction[i].row(), u_friction[i].col(), -sign(u - anchorU)*mu*u_friction[i].value());
+			_K.push_back(temp);
 		}
 	}
 
@@ -155,7 +156,8 @@ void Node::getFriction(double mu, double Kf, vector<T>& _K, VectorXd& f, int nod
 
 		for (int i = 0; i < v_friction.size(); i++)
 		{
-			_K.push_back(v_friction[i]);
+			T temp(v_friction[i].row(), v_friction[i].col(), -sign(v - anchorV)*mu*v_friction[i].value());
+			_K.push_back(temp);
 		}
 	}
 

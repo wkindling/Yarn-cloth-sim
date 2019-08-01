@@ -45,7 +45,7 @@ void Cloth::build()
 	{
 		for (int i = 0; i < width; i++) // v for weft (y)
 		{
-			Node* node = new Node(Vector3d(0, i*L, -j*L), i*L, -j*L);
+			Node* node = new Node(Vector3d(i*L, j*L, 0), i*L, j*L);
 
 			if ((i + j) % 2 == 0)
 			{
@@ -559,14 +559,14 @@ void Cloth::step(double h)
 		nodes[i]->getNormal();
 	}
 
-	computeForce(Vector3d(0, 0, -0.98), h);
+	computeForce(Vector3d(0, 0, -9.8), h);
 	
 	solve(h);
 
 	/* Update */
 	for (int i = 0; i < nodes.size(); i++)
 	{
-		if (i==width-1 || i==0)
+		if (i<=width-1 || i==0)
 		{
 			v.segment<3>(nodes[i]->node_index * 3) = Vector3d::Zero();			
 			continue;

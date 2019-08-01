@@ -14,20 +14,17 @@ double mouseX = 0, mouseY = 0;
 bool firstMouse = true;
 
 /* ---Parameters--- */
-int cloth_width = 5;
-int cloth_height = 5;
+int cloth_width = 8;
+int cloth_height = 6;
 double R = 0.25e-3;
 double L = 1e-3;
-
 double Y = 1e7;
-double rho = 10;
-
+double rho = 2;
 double B = 1e-2;
 double S = 1e4;
 double Kc = 1e7;
-
 double mu = 0.5;
-double Kf = 0.3;
+double Kf = 0.5;
 /*-------------------*/
 
 Camera camera(glm::vec3(12, 11, 5), glm::vec3(0,0,1),-132,-17);

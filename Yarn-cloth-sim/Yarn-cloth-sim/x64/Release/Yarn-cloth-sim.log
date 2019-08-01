@@ -1,11 +1,11 @@
 ﻿  main.cpp
-f:\visual_studio_project\yarn-cloth-sim\yarn-cloth-sim\yarn-cloth-sim\run.hpp(122): warning C4244: “参数”: 从“double”转换到“float”，可能丢失数据
+f:\visual_studio_project\yarn-cloth-sim\yarn-cloth-sim\yarn-cloth-sim\run.hpp(119): warning C4244: “参数”: 从“double”转换到“float”，可能丢失数据
+f:\visual_studio_project\yarn-cloth-sim\yarn-cloth-sim\yarn-cloth-sim\run.hpp(127): warning C4305: “参数”: 从“double”到“float”截断
+f:\visual_studio_project\yarn-cloth-sim\yarn-cloth-sim\yarn-cloth-sim\run.hpp(128): warning C4305: “参数”: 从“double”到“float”截断
+f:\visual_studio_project\yarn-cloth-sim\yarn-cloth-sim\yarn-cloth-sim\run.hpp(129): warning C4305: “参数”: 从“double”到“float”截断
 f:\visual_studio_project\yarn-cloth-sim\yarn-cloth-sim\yarn-cloth-sim\run.hpp(130): warning C4305: “参数”: 从“double”到“float”截断
-f:\visual_studio_project\yarn-cloth-sim\yarn-cloth-sim\yarn-cloth-sim\run.hpp(131): warning C4305: “参数”: 从“double”到“float”截断
-f:\visual_studio_project\yarn-cloth-sim\yarn-cloth-sim\yarn-cloth-sim\run.hpp(132): warning C4305: “参数”: 从“double”到“float”截断
-f:\visual_studio_project\yarn-cloth-sim\yarn-cloth-sim\yarn-cloth-sim\run.hpp(133): warning C4305: “参数”: 从“double”到“float”截断
   正在生成代码
-  5 of 9778 functions (<0.1%) were compiled, the rest were copied from previous compilation.
+  4 of 9778 functions (<0.1%) were compiled, the rest were copied from previous compilation.
     0 functions were new in current compilation
     18 functions had inline decision re-evaluated but remain unchanged
   已完成代码的生成
