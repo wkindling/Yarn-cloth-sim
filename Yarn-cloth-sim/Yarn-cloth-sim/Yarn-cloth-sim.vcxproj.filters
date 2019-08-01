@@ -42,6 +42,12 @@
     <ClInclude Include="utility.h">
       <Filter>头文件</Filter>
     </ClInclude>
+    <ClInclude Include="Mosek\QuadProg.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="Mosek\QuadProgMosek.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp">
@@ -66,6 +72,9 @@
       <Filter>源文件</Filter>
     </ClCompile>
     <ClCompile Include="utility.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="Mosek\QuadProgMosek.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
   </ItemGroup>

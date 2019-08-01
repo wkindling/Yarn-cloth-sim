@@ -128,6 +128,8 @@
     <ClInclude Include="bend.h" />
     <ClInclude Include="camera.h" />
     <ClInclude Include="cloth.h" />
+    <ClInclude Include="Mosek\QuadProg.h" />
+    <ClInclude Include="Mosek\QuadProgMosek.h" />
     <ClInclude Include="node.h" />
     <ClInclude Include="parallel_contact.h" />
     <ClInclude Include="run.hpp" />
@@ -139,6 +141,7 @@
     <ClCompile Include="bend.cpp" />
     <ClCompile Include="cloth.cpp" />
     <ClCompile Include="main.cpp" />
+    <ClCompile Include="Mosek\QuadProgMosek.cpp" />
     <ClCompile Include="node.cpp" />
     <ClCompile Include="parallel_contact.cpp" />
     <ClCompile Include="shear.cpp" />

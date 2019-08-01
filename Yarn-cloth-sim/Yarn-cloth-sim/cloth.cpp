@@ -5,8 +5,12 @@
 #include "parallel_contact.h"
 #include "shear.h"
 
+#include "Mosek/QuadProgMosek.h"
+
 #include <iostream>
 #include <freeglut.h>
+
+#define MOSEK_SOLVE
 
 using namespace std;
 using namespace Eigen;
@@ -592,6 +596,9 @@ void Cloth::solve(double h)
 	SparseMatrix<double> A = K;
 	VectorXd b = M * v + h * f;
 	
+#ifdef EIGEN_SOLVE
+
+	/*
 	LeastSquaresConjugateGradient<SparseMatrix<double>> lscg;
 	lscg.compute(A);
 	v = lscg.solve(b);
@@ -600,4 +607,35 @@ void Cloth::solve(double h)
 	{;
 		cout << "Failed " << lscg.info() << endl;
 	}
+	*/
+
+#endif
+
+#ifdef MOSEK_SOLVE
+	
+	bool success = mosekSolve(A, -b, v);
+
+#endif
+}
+
+bool Cloth::mosekSolve(const Eigen::SparseMatrix<double>& MDK, const Eigen::VectorXd& b, Eigen::VectorXd& v)
+{
+	QuadProgMosek *program = new QuadProgMosek();
+	double inf = numeric_limits<double>::infinity();
+
+	VectorXd xl;
+	VectorXd xu;
+	xl.setConstant(b.size(), -inf);
+	xu.setConstant(b.size(), inf);
+
+	program->setNumberOfVariables(b.size());
+
+	program->setObjectiveMatrix(MDK);
+	program->setObjectiveVector(b);
+
+	bool success = program->solve();
+
+	v = program->getPrimalSolution();
+
+	return success;
 }

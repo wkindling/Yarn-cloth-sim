@@ -25,6 +25,7 @@ public:
 	void computeForce(Eigen::Vector3d gravity, double h);
 	void computeInertia(std::vector<T>& _K);
 	void solve(double h);
+	bool mosekSolve(const Eigen::SparseMatrix<double>& MDK, const Eigen::VectorXd& b, Eigen::VectorXd& v);
 	
 public:
 	int width, height;

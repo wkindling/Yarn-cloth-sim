@@ -1,0 +1,30 @@
+
+File opened at Thu Aug  1 17:15:19 2019 by MOSEK version 8.1.0.80.
+Problem
+  Name                   :                 
+  Objective sense        : min             
+  Type                   : QO (quadratic optimization problem)
+  Constraints            : 0               
+  Cones                  : 0               
+  Scalar variables       : 264             
+  Matrix variables       : 0               
+  Integer variables      : 0               
+
+Optimizer started.
+Quadratic to conic reformulation started.
+Quadratic to conic reformulation terminated. Time: 0.00    
+Presolve started.
+Linear dependency checker started.
+Linear dependency checker terminated.
+Eliminator started.
+Freed constraints in eliminator : 45
+Eliminator terminated.
+Eliminator - tries                  : 1                 time                   : 0.00            
+Lin. dep.  - tries                  : 1                 time                   : 0.00            
+Lin. dep.  - number                 : 0               
+Presolve terminated. Time: 0.00    
+Optimizer terminated. Time: 0.01    
+
+
+File closed: Thu Aug  1 17:15:19 2019
+

@@ -1,25 +1,30 @@
 ﻿  cloth.cpp
-f:\visual_studio_project\yarn-cloth-sim\yarn-cloth-sim\yarn-cloth-sim\cloth.cpp(56): warning C4267: “=”: 从“size_t”转换到“int”，可能丢失数据
-f:\visual_studio_project\yarn-cloth-sim\yarn-cloth-sim\yarn-cloth-sim\cloth.cpp(85): warning C4267: “=”: 从“size_t”转换到“int”，可能丢失数据
-f:\visual_studio_project\yarn-cloth-sim\yarn-cloth-sim\yarn-cloth-sim\cloth.cpp(250): warning C4267: “初始化”: 从“size_t”转换到“int”，可能丢失数据
-f:\visual_studio_project\yarn-cloth-sim\yarn-cloth-sim\yarn-cloth-sim\cloth.cpp(266): warning C4267: “初始化”: 从“size_t”转换到“int”，可能丢失数据
-f:\visual_studio_project\yarn-cloth-sim\yarn-cloth-sim\yarn-cloth-sim\cloth.cpp(267): warning C4267: “初始化”: 从“size_t”转换到“int”，可能丢失数据
-f:\visual_studio_project\yarn-cloth-sim\yarn-cloth-sim\yarn-cloth-sim\cloth.cpp(294): warning C4267: “初始化”: 从“size_t”转换到“int”，可能丢失数据
-f:\visual_studio_project\yarn-cloth-sim\yarn-cloth-sim\yarn-cloth-sim\cloth.cpp(334): warning C4267: “初始化”: 从“size_t”转换到“int”，可能丢失数据
-f:\visual_studio_project\yarn-cloth-sim\yarn-cloth-sim\yarn-cloth-sim\cloth.cpp(350): warning C4267: “初始化”: 从“size_t”转换到“int”，可能丢失数据
-f:\visual_studio_project\yarn-cloth-sim\yarn-cloth-sim\yarn-cloth-sim\cloth.cpp(351): warning C4267: “初始化”: 从“size_t”转换到“int”，可能丢失数据
-f:\visual_studio_project\yarn-cloth-sim\yarn-cloth-sim\yarn-cloth-sim\cloth.cpp(378): warning C4267: “初始化”: 从“size_t”转换到“int”，可能丢失数据
-f:\visual_studio_project\yarn-cloth-sim\yarn-cloth-sim\yarn-cloth-sim\cloth.cpp(414): warning C4267: “参数”: 从“size_t”转换到“int”，可能丢失数据
-f:\visual_studio_project\yarn-cloth-sim\yarn-cloth-sim\yarn-cloth-sim\cloth.cpp(419): warning C4267: “参数”: 从“size_t”转换到“int”，可能丢失数据
-f:\visual_studio_project\yarn-cloth-sim\yarn-cloth-sim\yarn-cloth-sim\cloth.cpp(430): warning C4267: “参数”: 从“size_t”转换到“int”，可能丢失数据
-f:\visual_studio_project\yarn-cloth-sim\yarn-cloth-sim\yarn-cloth-sim\cloth.cpp(450): warning C4267: “初始化”: 从“size_t”转换到“int”，可能丢失数据
-f:\visual_studio_project\yarn-cloth-sim\yarn-cloth-sim\yarn-cloth-sim\cloth.cpp(467): warning C4267: “初始化”: 从“size_t”转换到“int”，可能丢失数据
-f:\visual_studio_project\yarn-cloth-sim\yarn-cloth-sim\yarn-cloth-sim\cloth.cpp(490): warning C4267: “初始化”: 从“size_t”转换到“int”，可能丢失数据
-f:\visual_studio_project\yarn-cloth-sim\yarn-cloth-sim\yarn-cloth-sim\cloth.cpp(507): warning C4267: “初始化”: 从“size_t”转换到“int”，可能丢失数据
-f:\visual_studio_project\yarn-cloth-sim\yarn-cloth-sim\yarn-cloth-sim\cloth.cpp(531): warning C4267: “参数”: 从“size_t”转换到“int”，可能丢失数据
+f:\visual_studio_project\yarn-cloth-sim\yarn-cloth-sim\yarn-cloth-sim\cloth.cpp(60): warning C4267: “=”: 从“size_t”转换到“int”，可能丢失数据
+f:\visual_studio_project\yarn-cloth-sim\yarn-cloth-sim\yarn-cloth-sim\cloth.cpp(89): warning C4267: “=”: 从“size_t”转换到“int”，可能丢失数据
+f:\visual_studio_project\yarn-cloth-sim\yarn-cloth-sim\yarn-cloth-sim\cloth.cpp(254): warning C4267: “初始化”: 从“size_t”转换到“int”，可能丢失数据
+f:\visual_studio_project\yarn-cloth-sim\yarn-cloth-sim\yarn-cloth-sim\cloth.cpp(270): warning C4267: “初始化”: 从“size_t”转换到“int”，可能丢失数据
+f:\visual_studio_project\yarn-cloth-sim\yarn-cloth-sim\yarn-cloth-sim\cloth.cpp(271): warning C4267: “初始化”: 从“size_t”转换到“int”，可能丢失数据
+f:\visual_studio_project\yarn-cloth-sim\yarn-cloth-sim\yarn-cloth-sim\cloth.cpp(298): warning C4267: “初始化”: 从“size_t”转换到“int”，可能丢失数据
+f:\visual_studio_project\yarn-cloth-sim\yarn-cloth-sim\yarn-cloth-sim\cloth.cpp(338): warning C4267: “初始化”: 从“size_t”转换到“int”，可能丢失数据
+f:\visual_studio_project\yarn-cloth-sim\yarn-cloth-sim\yarn-cloth-sim\cloth.cpp(354): warning C4267: “初始化”: 从“size_t”转换到“int”，可能丢失数据
+f:\visual_studio_project\yarn-cloth-sim\yarn-cloth-sim\yarn-cloth-sim\cloth.cpp(355): warning C4267: “初始化”: 从“size_t”转换到“int”，可能丢失数据
+f:\visual_studio_project\yarn-cloth-sim\yarn-cloth-sim\yarn-cloth-sim\cloth.cpp(382): warning C4267: “初始化”: 从“size_t”转换到“int”，可能丢失数据
+f:\visual_studio_project\yarn-cloth-sim\yarn-cloth-sim\yarn-cloth-sim\cloth.cpp(418): warning C4267: “参数”: 从“size_t”转换到“int”，可能丢失数据
+f:\visual_studio_project\yarn-cloth-sim\yarn-cloth-sim\yarn-cloth-sim\cloth.cpp(423): warning C4267: “参数”: 从“size_t”转换到“int”，可能丢失数据
+f:\visual_studio_project\yarn-cloth-sim\yarn-cloth-sim\yarn-cloth-sim\cloth.cpp(434): warning C4267: “参数”: 从“size_t”转换到“int”，可能丢失数据
+f:\visual_studio_project\yarn-cloth-sim\yarn-cloth-sim\yarn-cloth-sim\cloth.cpp(454): warning C4267: “初始化”: 从“size_t”转换到“int”，可能丢失数据
+f:\visual_studio_project\yarn-cloth-sim\yarn-cloth-sim\yarn-cloth-sim\cloth.cpp(471): warning C4267: “初始化”: 从“size_t”转换到“int”，可能丢失数据
+f:\visual_studio_project\yarn-cloth-sim\yarn-cloth-sim\yarn-cloth-sim\cloth.cpp(494): warning C4267: “初始化”: 从“size_t”转换到“int”，可能丢失数据
+f:\visual_studio_project\yarn-cloth-sim\yarn-cloth-sim\yarn-cloth-sim\cloth.cpp(511): warning C4267: “初始化”: 从“size_t”转换到“int”，可能丢失数据
+f:\visual_studio_project\yarn-cloth-sim\yarn-cloth-sim\yarn-cloth-sim\cloth.cpp(535): warning C4267: “参数”: 从“size_t”转换到“int”，可能丢失数据
+f:\visual_studio_project\yarn-cloth-sim\yarn-cloth-sim\yarn-cloth-sim\cloth.cpp(631): warning C4244: “参数”: 从“Eigen::EigenBase<Derived>::Index”转换到“int”，可能丢失数据
+          with
+          [
+              Derived=Eigen::Matrix<double,-1,1,0,-1,1>
+          ]
   正在生成代码
-  1 of 9765 functions (<0.1%) were compiled, the rest were copied from previous compilation.
+  0 of 10302 functions ( 0.0%) were compiled, the rest were copied from previous compilation.
     0 functions were new in current compilation
-    20 functions had inline decision re-evaluated but remain unchanged
+    0 functions had inline decision re-evaluated but remain unchanged
   已完成代码的生成
   Yarn-cloth-sim.vcxproj -> F:\Visual_Studio_Project\Yarn-cloth-sim\Yarn-cloth-sim\x64\Release\Yarn-cloth-sim.exe
