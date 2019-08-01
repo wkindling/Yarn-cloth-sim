@@ -102,7 +102,7 @@ void StretchSpring::solveU(vector<T>& _K, VectorXd& f, int nodes_size, double h)
 	if (!node1->onBorder)
 	{
 		MatrixXd fri_u1dq0 = 0.5*node1->normal.transpose() * Fq1dq0;
-		MatrixXd fri_u1dq1 = 0.5*node1->normal.transpose() *Fq1dq1;
+		MatrixXd fri_u1dq1 = 0.5*node1->normal.transpose() * Fq1dq1;
 
 		fillGlobalStiffness(node1->u_friction, fri_u1dq0, cross_index1, node_index0, h);
 		fillGlobalStiffness(node1->u_friction, fri_u1dq1, cross_index1, node_index1, h);
@@ -308,8 +308,8 @@ void StretchSpring::solveV(vector<T>& _K, VectorXd& f, int nodes_size, double h)
 		double Fv1dv0 = Ks * w.norm()*w.norm() / delta_v;;
 		double Fv0dv1 = Fv1dv0;
 
-		_K.push_back(T(cross_index1, cross_index0, -h * h*Fv1dv0));
-		_K.push_back(T(cross_index0, cross_index1, -h * h*Fv0dv1));
+		_K.push_back(T(cross_index1 + 1, cross_index0 + 1, -h * h*Fv1dv0));
+		_K.push_back(T(cross_index0 + 1, cross_index1 + 1, -h * h*Fv0dv1));
 	}
 }
 

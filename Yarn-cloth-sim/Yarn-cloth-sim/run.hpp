@@ -15,7 +15,7 @@ bool firstMouse = true;
 
 /* ---Parameters--- */
 int cloth_width = 8;
-int cloth_height = 6;
+int cloth_height = 8;
 double R = 0.25e-3;
 double L = 1e-3;
 double Y = 1e7;
@@ -23,8 +23,8 @@ double rho = 2;
 double B = 1e-2;
 double S = 1e4;
 double Kc = 1e7;
-double mu = 0.5;
-double Kf = 0.5;
+double mu = 0.3;
+double Kf = 0.3;
 /*-------------------*/
 
 Camera camera(glm::vec3(12, 11, 5), glm::vec3(0,0,1),-132,-17);
@@ -86,7 +86,7 @@ void display()
 	glVertex3d(0, 0, 10);
 	glEnd();
 
-	cloth.step(0.0001);
+	cloth.step(0.001);
 	cloth.draw();
 
 	glutPostRedisplay();

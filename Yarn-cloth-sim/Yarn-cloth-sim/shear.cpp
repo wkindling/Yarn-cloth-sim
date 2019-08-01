@@ -10,6 +10,7 @@ ShearSpring::ShearSpring(Node* n0, Node* n1, Node* n3, double _S, double _R, dou
 	node0 = n0;
 	node1 = n1;
 	node3 = n3;
+	
 	S = _S;
 	R = _R;
 	L = _L;
@@ -20,6 +21,7 @@ ShearSpring::ShearSpring(Node* n0, Node* n1, Node* n3, double _S, double _R, dou
 
 ShearSpring::~ShearSpring() {}
 
+/* Although the supplementary document requires u1>u0 and v3>v0, it has no influence on the result */
 void ShearSpring::solve(vector<T>& _K, VectorXd& f, double h)
 {
 	double l1 = (node1->position - node0->position).norm();
@@ -40,7 +42,7 @@ void ShearSpring::solve(vector<T>& _K, VectorXd& f, double h)
 
 	double phi = acos(d1.dot(d3));
 
-	shearEnergy = 0.5*Kx*L*(phi - M_PI / 2.0)*(phi - M_PI / 2.0);
+	shearEnergy = 0.5*Kx*L*(phi - M_PI / 2.0)*(phi - M_PI / 2.0); // Shear energy constrained the angle at crossings to be 90 degree.
 
 	int index0 = node0->node_index * 3;
 	int index1 = node1->node_index * 3;
@@ -71,13 +73,13 @@ void ShearSpring::solve(vector<T>& _K, VectorXd& f, double h)
 
 	fillGlobalStiffness(_K, Fq1dq1, index1, index1, h);
 	fillGlobalStiffness(_K, Fq1dq3, index1, index3, h);
+	fillGlobalStiffness(_K, Fq1dq0, index1, index0, h);
+
 	fillGlobalStiffness(_K, Fq3dq1, index3, index1, h);
 	fillGlobalStiffness(_K, Fq3dq3, index3, index3, h);
-
-	fillGlobalStiffness(_K, Fq1dq0, index1, index0, h);
 	fillGlobalStiffness(_K, Fq3dq0, index3, index0, h);
+
 	fillGlobalStiffness(_K, Fq0dq1, index0, index1, h);
 	fillGlobalStiffness(_K, Fq0dq3, index0, index3, h);
 	fillGlobalStiffness(_K, Fq0dq0, index0, index0, h);
-
 }

@@ -566,7 +566,8 @@ void Cloth::step(double h)
 	/* Update */
 	for (int i = 0; i < nodes.size(); i++)
 	{
-		if (i<=width-1 || i==0)
+		//if (nodes[i]->neighbor[NodeLocation::Left]==NULL || nodes[i]->neighbor[NodeLocation::Up]==NULL)
+		if (i==width-1 || i==0)
 		{
 			v.segment<3>(nodes[i]->node_index * 3) = Vector3d::Zero();			
 			continue;
@@ -591,17 +592,12 @@ void Cloth::solve(double h)
 	SparseMatrix<double> A = K;
 	VectorXd b = M * v + h * f;
 	
-	//ConjugateGradient<SparseMatrix<double>, Lower | Upper> lscg;
 	LeastSquaresConjugateGradient<SparseMatrix<double>> lscg;
 	lscg.compute(A);
 	v = lscg.solve(b);
-	//assert(lscg.info() == Success);
+
 	if (lscg.info() != Success)
 	{;
 		cout << "Failed " << lscg.info() << endl;
 	}
-	MatrixXd MM = M;
-	MatrixXd KK = K;
-	MatrixXd AA = A;
-	//cout << "M " << MM.determinant() << "  K " << KK.determinant() << " A "<< AA.determinant() << endl;
 }

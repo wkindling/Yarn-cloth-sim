@@ -42,11 +42,11 @@ void BendSpring::solve(vector<T>& _K, VectorXd& f, int nodes_size, double h)
 
 void BendSpring::solveU(vector<T>& _K, VectorXd& f, int nodes_size, double h)
 {
-	/*Offset to get crimp and then compute bending force*/
+	/* Offset to get crimp and then compute bending force */
 	Vector3d pos0 = node0->position - R * node0->normal;
 	Vector3d pos1 = node1->position - R * node1->normal;
 	Vector3d pos2 = node2->position - R * node2->normal;
-
+	
 	double l1 = (pos1 - pos0).norm();
 	double l2 = (pos2 - pos0).norm();
 
@@ -397,7 +397,7 @@ void BendSpring::solveV(vector<T>& _K, VectorXd& f, int nodes_size, double h)
 	if (!node2->onBorder)
 	{
 		double Fv2dv2 = -2 * Kb*theta*theta / pow((v1 - v2), 3);
-		_K.push_back(T(cross_index2, cross_index2, -h*h*Fv2dv2));
+		_K.push_back(T(cross_index2 + 1, cross_index2 + 1, -h * h*Fv2dv2));
 
 		MatrixXd Fq1dv2 = -2 * Kb*theta / (l1*(v1 - v2)*(v1 - v2)*sin(theta))*P1*d2;
 		MatrixXd Fq2dv2 = -2 * Kb*theta / (l2*(v1 - v2)*(v1 - v2)*sin(theta))*P2*d1;

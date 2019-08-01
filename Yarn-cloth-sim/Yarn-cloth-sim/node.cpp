@@ -17,13 +17,15 @@ Node::Node(Vector3d pos, double _u, double _v)
 
 	normal.setZero();
 	compressForce = 0;
-	//whichUp and index assigned externally
 
 	onBorder = false;
+
+	cross_index = -1;
+	node_index = -1;
+	//other parameters are assigned externally
 }
 
 Node::~Node() {}
-
 
 // Use SVD to get the vertex normal according to neighbors
 // Ensure that normal points from warp to weft
@@ -62,6 +64,7 @@ Vector3d Node::getNormal()
 	nor.normalize();
 	
 	/* Ensure that normal points from warp to weft */
+	// Get the positive side of the cloth
 	Vector3d cloth_up;
 	if (neighbor[NodeLocation::Up] && neighbor[NodeLocation::Right])
 	{
