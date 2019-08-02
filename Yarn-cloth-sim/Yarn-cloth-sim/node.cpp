@@ -19,6 +19,7 @@ Node::Node(Vector3d pos, double _u, double _v)
 	compressForce = 0;
 
 	onBorder = false;
+	fixed = false;
 
 	cross_index = -1;
 	node_index = -1;

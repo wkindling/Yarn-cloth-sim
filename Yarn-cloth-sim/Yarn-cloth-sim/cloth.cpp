@@ -86,6 +86,15 @@ void Cloth::build()
 		}
 	}
 
+	/* Apply fixed constraint */
+	for (int i = 0; i < nodes.size(); i++)
+	{
+		if (i == width - 1 || i == 0)
+		{
+			nodes[i]->fixed = true;
+		}
+	}
+
 	DoF = 3 * nodes.size() + 2 * cross_count;
 
 	cout << "DOF : " << DoF << endl;
@@ -565,18 +574,13 @@ void Cloth::step(double h)
 
 	computeForce(Vector3d(0, 0, -9.8), h);
 	
+	applyConstraint();
+
 	solve(h);
 
 	/* Update */
 	for (int i = 0; i < nodes.size(); i++)
 	{
-		//if (nodes[i]->neighbor[NodeLocation::Left]==NULL || nodes[i]->neighbor[NodeLocation::Up]==NULL)
-		if (i==width-1 || i==0)
-		{
-			v.segment<3>(nodes[i]->node_index * 3) = Vector3d::Zero();			
-			continue;
-		}
-		
 		nodes[i]->velocity = v.segment<3>(nodes[i]->node_index * 3);
 		nodes[i]->position = nodes[i]->position + nodes[i]->velocity*h;
 
@@ -598,7 +602,6 @@ void Cloth::solve(double h)
 	
 #ifdef EIGEN_SOLVE
 
-	/*
 	LeastSquaresConjugateGradient<SparseMatrix<double>> lscg;
 	lscg.compute(A);
 	v = lscg.solve(b);
@@ -607,18 +610,20 @@ void Cloth::solve(double h)
 	{;
 		cout << "Failed " << lscg.info() << endl;
 	}
-	*/
 
 #endif
 
 #ifdef MOSEK_SOLVE
 	
-	bool success = mosekSolve(A, -b, v);
+	bool success = mosekSolve(A, -b, Aeq, beq, Aineq, bineq, v);
 
 #endif
 }
 
-bool Cloth::mosekSolve(const Eigen::SparseMatrix<double>& MDK, const Eigen::VectorXd& b, Eigen::VectorXd& v)
+bool Cloth::mosekSolve(const SparseMatrix<double>& MDK, const VectorXd& b,
+	const SparseMatrix<double>& Aeq, const VectorXd& beq,
+	const SparseMatrix<double>& Aineq, const VectorXd& bineq,
+	VectorXd& v)
 {
 	QuadProgMosek *program = new QuadProgMosek();
 	double inf = numeric_limits<double>::infinity();
@@ -629,13 +634,82 @@ bool Cloth::mosekSolve(const Eigen::SparseMatrix<double>& MDK, const Eigen::Vect
 	xu.setConstant(b.size(), inf);
 
 	program->setNumberOfVariables(b.size());
+	program->setNumberOfEqualities(beq.size());
+	program->setNumberOfInequalities(bineq.size());
 
 	program->setObjectiveMatrix(MDK);
 	program->setObjectiveVector(b);
+
+	program->setInequalityMatrix(Aineq);
+	program->setInequalityVector(bineq);
+
+	program->setEqualityMatrix(Aeq);
+	program->setEqualityVector(beq);
 
 	bool success = program->solve();
 
 	v = program->getPrimalSolution();
 
 	return success;
+}
+
+void Cloth::applyConstraint()
+{
+	vector<T> _Aeq;
+	vector<T> _Aineq;
+	vector<pair<int, double>> _beq;
+	vector<pair<int, double>> _bineq;
+	
+	int eqsize = 0;
+	int ineqsize = 0;
+
+	for (int i = 0; i < nodes.size(); i++)
+	{
+		if (nodes[i]->fixed)
+		{
+			_Aeq.push_back(T(eqsize, nodes[i]->node_index * 3, 1));
+			_beq.push_back(make_pair(eqsize, nodes[i]->velocity.x()));
+			eqsize++;
+
+			_Aeq.push_back(T(eqsize, nodes[i]->node_index * 3 + 1, 1));
+			_beq.push_back(make_pair(eqsize, nodes[i]->velocity.y()));
+			eqsize++;
+			
+			_Aeq.push_back(T(eqsize, nodes[i]->node_index * 3 + 2, 1));
+			_beq.push_back(make_pair(eqsize, nodes[i]->velocity.z()));
+			eqsize++;
+
+			if (!nodes[i]->onBorder)
+			{
+				_Aeq.push_back(T(eqsize, nodes[i]->cross_index * 2 + nodes.size() * 3, 1));
+				_beq.push_back(make_pair(eqsize, nodes[i]->velocityUV.x()));
+				eqsize++;
+
+				_Aeq.push_back(T(eqsize, nodes[i]->cross_index * 2 + nodes.size() * 3 + 1, 1));
+				_beq.push_back(make_pair(eqsize, nodes[i]->velocityUV.y()));
+				eqsize++;
+			}
+		}
+	}
+	
+	Aeq.resize(eqsize, DoF);
+	Aineq.resize(ineqsize, DoF);
+	beq.resize(eqsize);
+	bineq.resize(ineqsize);
+
+	Aeq.setFromTriplets(_Aeq.begin(), _Aeq.end());
+	Aineq.setFromTriplets(_Aineq.begin(), _Aineq.end());
+
+	beq.setZero();
+	bineq.setZero();
+
+	for (int i = 0; i < _beq.size(); i++)
+	{
+		beq(_beq[i].first) = _beq[i].second;
+	}
+
+	for (int i = 0; i < _bineq.size(); i++)
+	{
+		bineq(_bineq[i].first) = _bineq[i].second;
+	}
 }

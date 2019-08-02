@@ -56,6 +56,8 @@ public:
 
 	bool onBorder;
 
+	bool fixed;
+
 	std::vector<T> u_friction;
 	std::vector<T> v_friction;
 	
