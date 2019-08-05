@@ -9,3 +9,6 @@ Implementation of ‘Yarn-Level Simulation of Woven Cloth’ on Siggraph Asia 20
 
 ### Result
 <img src="result/result.png">
+
+
+Thanks for the kind help from @[BentleyBlanks](https://github.com/BentleyBlanks).
