@@ -89,7 +89,7 @@ void Cloth::build()
 	/* Apply fixed constraint */
 	for (int i = 0; i < nodes.size(); i++)
 	{
-		if (i == width - 1 || i == 0)
+		if (i == 0 || i <= width - 1)
 		{
 			nodes[i]->fixed = true;
 		}
@@ -215,6 +215,8 @@ void Cloth::build()
 	f.setZero();
 	M.setZero();
 	K.setZero();
+
+	t = 0;
 }
 
 /* Fill the generalized mass matrix */
@@ -574,7 +576,7 @@ void Cloth::step(double h)
 
 	computeForce(Vector3d(0, 0, -9.8), h);
 	
-	applyConstraint();
+	applyConstraint(t);
 
 	solve(h);
 
@@ -593,6 +595,9 @@ void Cloth::step(double h)
 			nodes[i]->v = nodes[i]->v + nodes[i]->velocityUV.y()*h;
 		}
 	}
+
+	t += h;
+
 }
 
 void Cloth::solve(double h)
@@ -653,7 +658,7 @@ bool Cloth::mosekSolve(const SparseMatrix<double>& MDK, const VectorXd& b,
 	return success;
 }
 
-void Cloth::applyConstraint()
+void Cloth::applyConstraint(double t)
 {
 	vector<T> _Aeq;
 	vector<T> _Aineq;
@@ -662,36 +667,38 @@ void Cloth::applyConstraint()
 	
 	int eqsize = 0;
 	int ineqsize = 0;
-
-	for (int i = 0; i < nodes.size(); i++)
+	
+	if (t >= 0)
 	{
-		if (nodes[i]->fixed)
+		for (int i = 0; i < nodes.size(); i++)
 		{
-			_Aeq.push_back(T(eqsize, nodes[i]->node_index * 3, 1));
-			_beq.push_back(make_pair(eqsize, nodes[i]->velocity.x()));
-			eqsize++;
-
-			_Aeq.push_back(T(eqsize, nodes[i]->node_index * 3 + 1, 1));
-			_beq.push_back(make_pair(eqsize, nodes[i]->velocity.y()));
-			eqsize++;
-			
-			_Aeq.push_back(T(eqsize, nodes[i]->node_index * 3 + 2, 1));
-			_beq.push_back(make_pair(eqsize, nodes[i]->velocity.z()));
-			eqsize++;
-
-			if (!nodes[i]->onBorder)
+			if (nodes[i]->fixed)
 			{
-				_Aeq.push_back(T(eqsize, nodes[i]->cross_index * 2 + nodes.size() * 3, 1));
-				_beq.push_back(make_pair(eqsize, nodes[i]->velocityUV.x()));
+				_Aeq.push_back(T(eqsize, nodes[i]->node_index * 3, 1));
+				_beq.push_back(make_pair(eqsize, nodes[i]->velocity.x()));
 				eqsize++;
 
-				_Aeq.push_back(T(eqsize, nodes[i]->cross_index * 2 + nodes.size() * 3 + 1, 1));
-				_beq.push_back(make_pair(eqsize, nodes[i]->velocityUV.y()));
+				_Aeq.push_back(T(eqsize, nodes[i]->node_index * 3 + 1, 1));
+				_beq.push_back(make_pair(eqsize, nodes[i]->velocity.y()));
 				eqsize++;
+
+				_Aeq.push_back(T(eqsize, nodes[i]->node_index * 3 + 2, 1));
+				_beq.push_back(make_pair(eqsize, nodes[i]->velocity.z()));
+				eqsize++;
+
+				if (!nodes[i]->onBorder)
+				{
+					_Aeq.push_back(T(eqsize, nodes[i]->cross_index * 2 + nodes.size() * 3, 1));
+					_beq.push_back(make_pair(eqsize, nodes[i]->velocityUV.x()));
+					eqsize++;
+
+					_Aeq.push_back(T(eqsize, nodes[i]->cross_index * 2 + nodes.size() * 3 + 1, 1));
+					_beq.push_back(make_pair(eqsize, nodes[i]->velocityUV.y()));
+					eqsize++;
+				}
 			}
 		}
 	}
-	
 	Aeq.resize(eqsize, DoF);
 	Aineq.resize(ineqsize, DoF);
 	beq.resize(eqsize);

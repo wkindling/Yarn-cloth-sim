@@ -29,12 +29,14 @@ public:
 		const Eigen::SparseMatrix<double>& Aeq, const Eigen::VectorXd& beq,
 		const Eigen::SparseMatrix<double>& Aineq, const Eigen::VectorXd& bineq,
 		Eigen::VectorXd& v);
-	void applyConstraint();
+	void applyConstraint(double t);
 
 public:
 	int width, height;
 	double R, L, mu, rho;
 	double Y, B, S, Kc, Kf;
+
+	double t;
 
 	int DoF;
 

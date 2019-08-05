@@ -365,7 +365,8 @@ bool QuadProgMosek::solve() {
 	MSKenv_t      env = __getMosekEnv();
 	MSKtask_t     task = __getMosekTask();
 
-	DoNextTask(true).doNext([&]() {
+	DoNextTask(true).doNext([&]() 
+	{
 		MSKrescodee result = MSK_RES_OK;
 		if (task != NULL) {
 			result = MSK_deletetask(&task);
@@ -375,11 +376,6 @@ bool QuadProgMosek::solve() {
 		MSKrescodee result = MSK_maketask(env, kNumCons, kNumVars, &task);
 		__setMosekTask(task);
 		return result;
-	}).doNext([&]() {
-		// Log to stdout, file, or none
-		//return MSK_linkfunctotaskstream(task, MSK_STREAM_LOG, NULL, __mosekLog);
-		return MSK_linkfiletotaskstream(task, MSK_STREAM_LOG, "mosek.log", 0);
-		//return true;
 	}).doNext([&]() {
 		// Set parameters
 		MSKrescodee result = MSK_RES_OK;

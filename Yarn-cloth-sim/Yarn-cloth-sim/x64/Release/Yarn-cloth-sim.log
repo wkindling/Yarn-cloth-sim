@@ -1,50 +1,12 @@
-﻿  cloth.cpp
-f:\visual_studio_project\yarn-cloth-sim\yarn-cloth-sim\yarn-cloth-sim\cloth.cpp(60): warning C4267: “=”: 从“size_t”转换到“int”，可能丢失数据
-f:\visual_studio_project\yarn-cloth-sim\yarn-cloth-sim\yarn-cloth-sim\cloth.cpp(98): warning C4267: “=”: 从“size_t”转换到“int”，可能丢失数据
-f:\visual_studio_project\yarn-cloth-sim\yarn-cloth-sim\yarn-cloth-sim\cloth.cpp(263): warning C4267: “初始化”: 从“size_t”转换到“int”，可能丢失数据
-f:\visual_studio_project\yarn-cloth-sim\yarn-cloth-sim\yarn-cloth-sim\cloth.cpp(279): warning C4267: “初始化”: 从“size_t”转换到“int”，可能丢失数据
-f:\visual_studio_project\yarn-cloth-sim\yarn-cloth-sim\yarn-cloth-sim\cloth.cpp(280): warning C4267: “初始化”: 从“size_t”转换到“int”，可能丢失数据
-f:\visual_studio_project\yarn-cloth-sim\yarn-cloth-sim\yarn-cloth-sim\cloth.cpp(307): warning C4267: “初始化”: 从“size_t”转换到“int”，可能丢失数据
-f:\visual_studio_project\yarn-cloth-sim\yarn-cloth-sim\yarn-cloth-sim\cloth.cpp(347): warning C4267: “初始化”: 从“size_t”转换到“int”，可能丢失数据
-f:\visual_studio_project\yarn-cloth-sim\yarn-cloth-sim\yarn-cloth-sim\cloth.cpp(363): warning C4267: “初始化”: 从“size_t”转换到“int”，可能丢失数据
-f:\visual_studio_project\yarn-cloth-sim\yarn-cloth-sim\yarn-cloth-sim\cloth.cpp(364): warning C4267: “初始化”: 从“size_t”转换到“int”，可能丢失数据
-f:\visual_studio_project\yarn-cloth-sim\yarn-cloth-sim\yarn-cloth-sim\cloth.cpp(391): warning C4267: “初始化”: 从“size_t”转换到“int”，可能丢失数据
-f:\visual_studio_project\yarn-cloth-sim\yarn-cloth-sim\yarn-cloth-sim\cloth.cpp(427): warning C4267: “参数”: 从“size_t”转换到“int”，可能丢失数据
-f:\visual_studio_project\yarn-cloth-sim\yarn-cloth-sim\yarn-cloth-sim\cloth.cpp(432): warning C4267: “参数”: 从“size_t”转换到“int”，可能丢失数据
-f:\visual_studio_project\yarn-cloth-sim\yarn-cloth-sim\yarn-cloth-sim\cloth.cpp(443): warning C4267: “参数”: 从“size_t”转换到“int”，可能丢失数据
-f:\visual_studio_project\yarn-cloth-sim\yarn-cloth-sim\yarn-cloth-sim\cloth.cpp(463): warning C4267: “初始化”: 从“size_t”转换到“int”，可能丢失数据
-f:\visual_studio_project\yarn-cloth-sim\yarn-cloth-sim\yarn-cloth-sim\cloth.cpp(480): warning C4267: “初始化”: 从“size_t”转换到“int”，可能丢失数据
-f:\visual_studio_project\yarn-cloth-sim\yarn-cloth-sim\yarn-cloth-sim\cloth.cpp(503): warning C4267: “初始化”: 从“size_t”转换到“int”，可能丢失数据
-f:\visual_studio_project\yarn-cloth-sim\yarn-cloth-sim\yarn-cloth-sim\cloth.cpp(520): warning C4267: “初始化”: 从“size_t”转换到“int”，可能丢失数据
-f:\visual_studio_project\yarn-cloth-sim\yarn-cloth-sim\yarn-cloth-sim\cloth.cpp(544): warning C4267: “参数”: 从“size_t”转换到“int”，可能丢失数据
-f:\visual_studio_project\yarn-cloth-sim\yarn-cloth-sim\yarn-cloth-sim\cloth.cpp(636): warning C4244: “参数”: 从“Eigen::EigenBase<Derived>::Index”转换到“int”，可能丢失数据
-          with
-          [
-              Derived=Eigen::Matrix<double,-1,1,0,-1,1>
-          ]
-f:\visual_studio_project\yarn-cloth-sim\yarn-cloth-sim\yarn-cloth-sim\cloth.cpp(637): warning C4244: “参数”: 从“Eigen::EigenBase<Derived>::Index”转换到“int”，可能丢失数据
-          with
-          [
-              Derived=Eigen::Matrix<double,-1,1,0,-1,1>
-          ]
-f:\visual_studio_project\yarn-cloth-sim\yarn-cloth-sim\yarn-cloth-sim\cloth.cpp(638): warning C4244: “参数”: 从“Eigen::EigenBase<Derived>::Index”转换到“int”，可能丢失数据
-          with
-          [
-              Derived=Eigen::Matrix<double,-1,1,0,-1,1>
-          ]
-f:\visual_studio_project\yarn-cloth-sim\yarn-cloth-sim\yarn-cloth-sim\cloth.cpp(684): warning C4267: “参数”: 从“size_t”转换到“const StorageIndex”，可能丢失数据
-          with
-          [
-              StorageIndex=int
-          ]
-f:\visual_studio_project\yarn-cloth-sim\yarn-cloth-sim\yarn-cloth-sim\cloth.cpp(688): warning C4267: “参数”: 从“size_t”转换到“const StorageIndex”，可能丢失数据
-          with
-          [
-              StorageIndex=int
-          ]
+﻿  main.cpp
+f:\visual_studio_project\yarn-cloth-sim\yarn-cloth-sim\yarn-cloth-sim\run.hpp(119): warning C4244: “参数”: 从“double”转换到“float”，可能丢失数据
+f:\visual_studio_project\yarn-cloth-sim\yarn-cloth-sim\yarn-cloth-sim\run.hpp(127): warning C4305: “参数”: 从“double”到“float”截断
+f:\visual_studio_project\yarn-cloth-sim\yarn-cloth-sim\yarn-cloth-sim\run.hpp(128): warning C4305: “参数”: 从“double”到“float”截断
+f:\visual_studio_project\yarn-cloth-sim\yarn-cloth-sim\yarn-cloth-sim\run.hpp(129): warning C4305: “参数”: 从“double”到“float”截断
+f:\visual_studio_project\yarn-cloth-sim\yarn-cloth-sim\yarn-cloth-sim\run.hpp(130): warning C4305: “参数”: 从“double”到“float”截断
   正在生成代码
-  2 of 10345 functions (<0.1%) were compiled, the rest were copied from previous compilation.
+  5 of 10321 functions (<0.1%) were compiled, the rest were copied from previous compilation.
     0 functions were new in current compilation
-    20 functions had inline decision re-evaluated but remain unchanged
+    17 functions had inline decision re-evaluated but remain unchanged
   已完成代码的生成
   Yarn-cloth-sim.vcxproj -> F:\Visual_Studio_Project\Yarn-cloth-sim\Yarn-cloth-sim\x64\Release\Yarn-cloth-sim.exe
